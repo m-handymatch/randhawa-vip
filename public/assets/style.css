@@ -48,6 +48,11 @@ p { margin: 0; }
 .brand-name { font-family: var(--display); font-size: 46px; font-weight: 700; letter-spacing: -0.015em; line-height: 1; }
 .brand-tag { margin-top: 4px; font-size: 15px; color: var(--ink-soft); }
 .brand-name span { color: var(--leaf); }
+/* Signed in: the logo stands alone and the greeting sits beside it */
+.signed-in .brand-text { display: none; }
+.top-greeting { margin-right: auto; flex: 1 1 260px; min-width: 0; }
+.top-greeting h1 { font-size: clamp(22px, 2.2vw, 28px); }
+.top-greeting .place { margin-top: 2px; font-size: 18px; }
 .top-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .who { color: var(--ink-soft); font-size: 16px; }
 
@@ -108,7 +113,8 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 
 /* Signed-in view */
 .home-head { padding: 4px 0 22px; }
-.home-head .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: start; }
+.home-head .wrap { display: flex; }
+.home-head .settings { flex: 1; }
 .home-head h1 { font-size: clamp(22px, 2.2vw, 28px); }
 .place { margin-top: 8px; font-size: 20px; color: var(--ink-soft); }
 .place strong { color: var(--ink); }
@@ -214,6 +220,10 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 }
 @media (max-width: 520px) {
   .brand-mark { width: 64px; height: 64px; }
+  .signed-in .top .wrap { gap: 12px 14px; }
+  .top-greeting { flex: 1 1 0; min-width: 200px; }
+  .signed-in .top-actions { flex-basis: 100%; }
+  .top-greeting .place { font-size: 16px; }
   .brand-name { font-size: 32px; }
   .brand-tag { font-size: 14px; }
   body { font-size: 17px; }
