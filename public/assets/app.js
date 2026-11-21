@@ -752,11 +752,28 @@
   function readEventsCache() {
     try { return JSON.parse(localStorage.getItem(eventsCacheKey()) || 'null'); } catch (e) { return null; }
   }
+  var DAY_MS = 24 * 3600e3;
   function writeEventsCache(data) {
+    // Ask the server again once its saved events turn 24 hours old; if it was
+    // refreshing in the background just now, check back in 10 minutes.
+    var now = Date.now(), updated = Date.parse(data.updated_at || '') || now;
+    var recheck = data.refreshing ? now + 10 * 60e3 : updated + DAY_MS;
+    recheck = Math.min(Math.max(recheck, now + 5 * 60e3), now + DAY_MS);
     try {
       Object.keys(localStorage).forEach(function (k) { if (k.indexOf('rv-events:') === 0) localStorage.removeItem(k); });
-      localStorage.setItem(eventsCacheKey(), JSON.stringify({ at: Date.now(), places: data.places || [], events: data.events || [] }));
+      localStorage.setItem(eventsCacheKey(), JSON.stringify({ at: now, updated_at: data.updated_at || null, recheck: recheck, places: data.places || [], events: data.events || [] }));
     } catch (e) { /* storage full or blocked */ }
+  }
+  function showEventsUpdated(iso) {
+    var t = Date.parse(iso || ''), msg = 'Events refresh once a day, so very new events can take up to 24 hours to appear.';
+    if (t) {
+      var d = new Date(t), today = new Date();
+      var when = d.toDateString() === today.toDateString() ? 'today' :
+        d.toDateString() === new Date(today.getTime() - DAY_MS).toDateString() ? 'yesterday' :
+        d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      msg += ' Last updated ' + when + ' at ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '.';
+    }
+    $('events-updated').textContent = msg;
   }
   function showEventsNote(places) {
     $('events-note').textContent = places.length ? 'From ' + listJoin(places) + '.' : 'Around you and your nearby cities.';
@@ -787,6 +804,9 @@
     var cached = readEventsCache(), shownCached = false;
     if (cached && cached.events && cached.events.length) {
       shownCached = showEvents(cached.places || [], cached.events) > 0;
+      showEventsUpdated(cached.updated_at);
+      // Saved less than a day ago: use it and don't ask the server again yet.
+      if (shownCached && cached.recheck && Date.now() < cached.recheck) return;
       if (shownCached) $('events-count').textContent = 'Updating\u2026';
     }
     db.functions.invoke('local-events', { method: 'GET' }).then(function (r) {
@@ -805,6 +825,7 @@
         eventsEmpty(['No upcoming events found nearby yet.', 'Check back tomorrow.']); return;
       }
       showEvents(evPlaces, events);
+      showEventsUpdated(r.data.updated_at);
       writeEventsCache(r.data);
     });
   }

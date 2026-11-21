@@ -110,13 +110,17 @@ async function takeBudget(db: SupabaseClient): Promise<boolean> {
   return !error && data === true;
 }
 
-async function placeEvents(db: SupabaseClient, city: string, state: string, apiKey: string | undefined): Promise<LocalEvent[]> {
+type PlaceResult = { events: LocalEvent[]; at: string | null; refreshing: boolean };
+
+async function placeEvents(db: SupabaseClient, city: string, state: string, apiKey: string | undefined): Promise<PlaceResult> {
   const key = `${city.toLowerCase()}|${state}`;
-  const { data: cached } = await db.from("local_events_cache").select("events, fetched_at").eq("area_key", key).maybeSingle();
+  const { data: cached } = await db.from("local_events_cache").select("events, fetched_at, updated_at").eq("area_key", key).maybeSingle();
+  // updated_at = when the events were last really searched (fetched_at also moves on retries).
+  const at: string | null = cached ? (cached.updated_at ?? cached.fetched_at) : null;
   const fresh = cached && Date.now() - new Date(cached.fetched_at).getTime() < CACHE_HOURS * 3600e3;
-  if (fresh) return cached!.events as LocalEvent[];
+  if (fresh) return { events: cached!.events as LocalEvent[], at, refreshing: false };
   const stale = (cached?.events as LocalEvent[] | undefined) ?? [];
-  if (!apiKey) return stale;
+  if (!apiKey) return { events: stale, at, refreshing: false };
   // Stale-while-revalidate: when this city has saved events, answer with them right
   // away and refresh in the background, so nobody waits on the slow search.
   if (cached) {
@@ -124,9 +128,10 @@ async function placeEvents(db: SupabaseClient, city: string, state: string, apiK
     // deno-lint-ignore no-explicit-any
     const rt = (globalThis as any).EdgeRuntime;
     if (rt?.waitUntil) rt.waitUntil(job); else await job;
-    return stale;
+    return { events: stale, at, refreshing: true };
   }
-  return await refreshPlace(db, key, city, state, apiKey, stale);
+  const events = await refreshPlace(db, key, city, state, apiKey, stale);
+  return { events, at: new Date().toISOString(), refreshing: false };
 }
 
 async function refreshPlace(db: SupabaseClient, key: string, city: string, state: string, apiKey: string, stale: LocalEvent[]): Promise<LocalEvent[]> {
@@ -159,7 +164,8 @@ async function refreshPlace(db: SupabaseClient, key: string, city: string, state
       return await holdOff();
     }
     const events = parseEvents(json, city).slice(0, 15);
-    await db.from("local_events_cache").upsert({ area_key: key, city, state, events, fetched_at: new Date().toISOString() });
+    const now = new Date().toISOString();
+    await db.from("local_events_cache").upsert({ area_key: key, city, state, events, fetched_at: now, updated_at: now });
     return events;
   } catch (err) {
     console.log(`local-events: ${city}, ${state}: ${String(err).slice(0, 200)}`);
@@ -273,6 +279,12 @@ Deno.serve(async (req) => {
     placeEvents(db, place.city, place.state, apiKey),
     ...nearby.map((n) => placeEvents(db, n.name, n.state, apiKey)),
   ]);
-  const events = mergeEvents(lists.map((list, i) => list.map((e) => ({ ...e, place: labels[i] }))));
-  return reply(200, { places: labels, events, configured: !!apiKey }, origin);
+  const events = mergeEvents(lists.map((r, i) => r.events.map((e) => ({ ...e, place: labels[i] }))));
+  // Oldest search among the cities shown: "updated" is only as new as the stalest city.
+  const times = lists.map((r) => r.at).filter((t): t is string => !!t).sort();
+  return reply(200, {
+    places: labels, events, configured: !!apiKey,
+    updated_at: times[0] ?? null, refreshing: lists.some((r) => r.refreshing),
+    cache_hours: CACHE_HOURS,
+  }, origin);
 });

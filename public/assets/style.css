@@ -727,3 +727,4 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 .box-scroll::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 10px; border: 2px solid rgba(255,255,255,.9); min-height: 40px; }
 .markets .box-scroll::-webkit-scrollbar-thumb { background: var(--forest); }
 @supports not selector(::-webkit-scrollbar) { .box-scroll { scrollbar-color: var(--ink) rgba(255,255,255,.7); } .markets .box-scroll { scrollbar-color: var(--forest) rgba(255,255,255,.7); } }
+.evbox .evbox-note { margin: 4px 0 2px; font-size: 12px; line-height: 1.4; color: var(--ink-soft); }
