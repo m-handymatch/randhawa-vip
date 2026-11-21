@@ -100,9 +100,22 @@ async function fetchNews(apiKey: string, city: string, state: string): Promise<A
   return found.slice(0, MAX_ARTICLES);
 }
 
+// Optional IP allowlist: set the secret ALLOWED_IPS to a comma-separated list
+// (e.g. "98.97.24.171, 203.0.113.5"). Leave it unset to allow everyone.
+const ALLOWED_IPS = (Deno.env.get("ALLOWED_IPS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+
+function clientIp(req: Request): string {
+  return (req.headers.get("cf-connecting-ip")
+    ?? req.headers.get("x-real-ip")
+    ?? (req.headers.get("x-forwarded-for") ?? "").split(",")[0]).trim();
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
+  if (ALLOWED_IPS.length && !ALLOWED_IPS.includes(clientIp(req))) {
+    return reply(403, { error: "This site is private" }, origin);
+  }
   if (req.method !== "GET") return reply(405, { error: "Use GET" }, origin);
 
   const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");

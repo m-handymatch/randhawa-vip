@@ -49,6 +49,11 @@ const { location, articles } = await res.json();
 2. Site appears at `https://m-handymatch.github.io/randhawa-vip/`.
 3. In Supabase (zip-zcta project) → **Authentication → URL Configuration**: set **Site URL** to the site's address and add it under **Redirect URLs**, so the confirmation email link brings people back to the site.
 
+### Private: only your IP (Cloudflare)
+
+- Website: Cloudflare **Security → WAF → Custom rules** → block when `not ip.src in {YOUR.IP}`.
+- News function: Supabase secret `ALLOWED_IPS` (comma-separated). Unset = open to everyone.
+
 To use the randhawa.vip domain later: add it under Settings → Pages → Custom domain, point the DNS records GitHub shows, then update the Site URL in Supabase.
 
 ## Files
