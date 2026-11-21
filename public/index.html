@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20261121zm">
+  <link rel="stylesheet" href="assets/style.css?v=20261121zn">
   <link rel="icon" href="assets/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
@@ -29,6 +29,7 @@
       <p class="place" id="place"></p>
       <div class="top-actions">
         <span class="who" id="who" hidden></span>
+        <button class="btn btn-quiet btn-small" id="change-pw" type="button" hidden>Change password</button>
         <button class="btn btn-quiet btn-small" id="signout" type="button" hidden>Sign out</button>
       </div>
     </div>
@@ -106,7 +107,20 @@
               <button class="btn" type="submit">Sign in</button>
               <div class="message" id="signin-message" role="status" hidden></div>
             </form>
+            <p class="switch"><button class="linkish" type="button" data-show="forgot">Forgot your password?</button></p>
             <p class="switch">New here? <button class="linkish" type="button" data-show="signup">Join your neighborhood</button></p>
+          </div>
+          <div id="forgot-panel" hidden>
+            <h2>Reset your password</h2>
+            <p class="sub">We'll email you a link to set a new one.</p>
+            <form id="forgot-form" novalidate>
+              <label>Email
+                <input name="email" type="email" autocomplete="email" required>
+              </label>
+              <button class="btn" type="submit">Email me a reset link</button>
+              <div class="message" id="forgot-message" role="status" hidden></div>
+            </form>
+            <p class="switch"><button class="linkish" type="button" data-show="signin">Back to sign in</button></p>
           </div>
           <div id="signup-panel" hidden>
             <h2>Join your neighborhood</h2>
@@ -370,8 +384,25 @@
   </div>
 </footer>
 
+<dialog class="pw-dialog" id="pw-dialog" aria-labelledby="pw-title">
+  <form id="pw-form" novalidate>
+    <h2 id="pw-title">Set a new password</h2>
+    <label>New password
+      <input name="password" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <label>Type it again
+      <input name="confirm" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <div class="message" id="pw-message" role="status" hidden></div>
+    <div class="pw-actions">
+      <button class="btn" type="submit">Save password</button>
+      <button class="btn btn-quiet" type="button" id="pw-cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="assets/app.js?v=20261121zm"></script>
-<script src="assets/forum.js?v=20261121zm"></script>
+<script src="assets/app.js?v=20261121zn"></script>
+<script src="assets/forum.js?v=20261121zn"></script>
 </body>
 </html>

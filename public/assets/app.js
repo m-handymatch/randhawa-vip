@@ -118,6 +118,7 @@
       var which = b.getAttribute('data-show');
       show($('signup-panel'), which === 'signup');
       show($('signin-panel'), which === 'signin');
+      show($('forgot-panel'), which === 'forgot');
       document.querySelectorAll('.auth-tab').forEach(function (t) {
         var on = t.getAttribute('data-show') === which;
         t.classList.toggle('is-on', on); t.setAttribute('aria-selected', String(on));
@@ -171,6 +172,41 @@
   });
 
   $('signout').addEventListener('click', function () { db.auth.signOut(); });
+
+  // ---------- Forgot / change password ----------
+  $('forgot-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, msg = $('forgot-message'), btn = f.querySelector('button'), email = f.email.value.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return message(msg, 'Enter the email you joined with.', 'bad');
+    btn.disabled = true;
+    db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/' }).then(function (r) {
+      if (r.error) return message(msg, r.error.message, 'bad');
+      message(msg, 'If ' + email + ' has an account, a reset link is on its way. Open it on this device.', 'ok');
+    }).finally(function () { btn.disabled = false; });
+  });
+
+  function openPw(title) {
+    $('pw-title').textContent = title;
+    $('pw-form').reset(); message($('pw-message'), '');
+    var d = $('pw-dialog');
+    if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+    d.querySelector('input').focus();
+  }
+  $('change-pw').addEventListener('click', function () { openPw('Change your password'); });
+  $('pw-cancel').addEventListener('click', function () { $('pw-dialog').close(); });
+  $('pw-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, msg = $('pw-message'), btn = f.querySelector('button[type=submit]');
+    if (f.password.value.length < 8) return message(msg, 'Use at least 8 characters.', 'bad');
+    if (f.password.value !== f.confirm.value) return message(msg, 'The two passwords don\u2019t match.', 'bad');
+    btn.disabled = true;
+    db.auth.updateUser({ password: f.password.value }).then(function (r) {
+      if (r.error) return message(msg, r.error.message, 'bad');
+      message(msg, 'Saved. Use your new password next time you sign in.', 'ok');
+      f.password.value = ''; f.confirm.value = '';
+      setTimeout(function () { $('pw-dialog').close(); }, 1800);
+    }).finally(function () { btn.disabled = false; });
+  });
 
   // ---------- Signed-in home ----------
   function renderPlace() {
@@ -1164,6 +1200,7 @@
     show($('dashboard'), !!state.user);
     show($('who'), !!state.user);
     show($('signout'), !!state.user);
+    show($('change-pw'), !!state.user);
     show($('top-greeting'), !!state.user);
     show($('top-settings'), !!state.user);
     document.body.classList.toggle('signed-in', !!state.user);
@@ -1173,6 +1210,8 @@
 
   var lastUserId;
   db.auth.onAuthStateChange(function (_event, session) {
+    // Opened from a password reset email: signed in for this step, ask for the new password.
+    if (_event === 'PASSWORD_RECOVERY') setTimeout(function () { openPw('Set a new password'); }, 0);
     var id = session ? session.user.id : null;
     // Supabase can report the same session twice on load (SIGNED_IN, then
     // INITIAL_SESSION); only redraw when the signed-in person actually changes.

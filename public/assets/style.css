@@ -381,8 +381,8 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 .signed-in .top .hint { color: #C9D6E8; }
 .signed-in .top .hint.ok { color: #9BE3B4; }
 .signed-in .top .hint.bad { color: #FFB4A8; }
-.signed-in #signout { background: transparent; color: #fff; border-color: rgba(255,255,255,.7); box-shadow: none; }
-.signed-in #signout:hover { background: rgba(255,255,255,.12); }
+.signed-in #signout, .signed-in #change-pw { background: transparent; color: #fff; border-color: rgba(255,255,255,.7); box-shadow: none; }
+.signed-in #signout:hover, .signed-in #change-pw:hover { background: rgba(255,255,255,.12); }
 
 /* Buttons: forest green */
 .btn { background: var(--forest); color: #fff; border-color: var(--forest); box-shadow: 0 2px 0 #0F4A30; }
@@ -798,3 +798,12 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
   font-size: 13px; line-height: 1.45; white-space: normal; box-shadow: 0 8px 24px rgba(20, 40, 75, .25);
 }
 .panel-head .note[data-full]:focus-visible { outline: 2px solid var(--marigold); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- Password dialog ---------- */
+.pw-dialog { width: min(420px, calc(100vw - 32px)); padding: 24px; border: 0; border-radius: 18px; box-shadow: 0 24px 60px rgba(20, 40, 75, .3); color: var(--ink); }
+.pw-dialog::backdrop { background: rgba(20, 40, 75, .45); }
+.pw-dialog h2 { font-family: var(--display); font-size: 24px; margin: 0 0 12px; }
+.pw-dialog form { display: grid; gap: 12px; }
+.pw-dialog label { display: grid; gap: 4px; font-weight: 600; font-size: 15px; }
+.pw-dialog input { font: 16px var(--body); padding: 10px 12px; border: 1px solid #B9C7BE; border-radius: 10px; }
+.pw-actions { display: flex; gap: 10px; margin-top: 4px; }
