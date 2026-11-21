@@ -143,6 +143,7 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 .zip-form label { font-size: 15px; }
 .zip-row { display: flex; gap: 10px; align-items: center; }
 .zip-form input { width: 130px; min-height: 44px; }
+#zip-form > label { width: 130px; text-align: center; }  /* centred over the ZIP box */
 .settings { display: flex; flex-wrap: wrap; gap: 18px 24px; align-items: flex-start; }
 .field-label { font-weight: 700; font-size: 15px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
