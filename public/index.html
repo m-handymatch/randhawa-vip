@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20261120m">
+  <link rel="stylesheet" href="assets/style.css?v=20261120n">
   <link rel="icon" href="assets/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
@@ -145,7 +145,13 @@
 
     <div class="news">
       <div class="wrap news-grid">
-        <aside class="news-side" id="news-side" aria-label="More for your neighborhood"></aside>
+        <aside class="news-side" id="news-side" aria-labelledby="events-title">
+          <h2 id="events-title">Upcoming events</h2>
+          <p class="note" id="events-note">Happening in your city and the cities you picked. Tap one for details.</p>
+          <p class="loading" id="events-loading" role="status">Looking for events nearby…</p>
+          <ul class="events" id="events"></ul>
+          <div class="empty" id="events-empty" hidden></div>
+        </aside>
         <div class="news-main">
         <h2 id="news-title">Around the neighborhood</h2>
         <p class="note" id="news-note">Headlines from local and regional news. Tap one to read it on the publisher's site.</p>
@@ -162,11 +168,11 @@
 
 <footer class="foot">
   <div class="wrap">
-    <p>randhawa.vip connects neighbors. Headlines come from publishers via NewsData.io and Google News, and link to the original stories. City facts and photos come from Wikipedia and Wikimedia Commons; maps from OpenStreetMap.</p>
+    <p>randhawa.vip connects neighbors. Headlines come from publishers via NewsData.io and Google News, and link to the original stories. Events are found with Google via SerpApi and link to their organizers. City facts and photos come from Wikipedia and Wikimedia Commons; maps from OpenStreetMap.</p>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="assets/app.js?v=20261120m"></script>
+<script src="assets/app.js?v=20261120n"></script>
 </body>
 </html>

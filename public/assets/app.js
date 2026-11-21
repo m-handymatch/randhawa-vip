@@ -381,6 +381,60 @@
     });
   }
 
+  // ---------- Upcoming events (left column) ----------
+  var MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function eventsEmpty(lines) {
+    var box = $('events-empty'); box.innerHTML = '';
+    lines.forEach(function (t) { var p = document.createElement('p'); p.textContent = t; box.appendChild(p); });
+    box.hidden = false;
+  }
+
+  function renderEvents(events) {
+    var list = $('events'); list.innerHTML = '';
+    events.forEach(function (ev) {
+      var li = document.createElement('li'); li.className = 'event';
+      var date = document.createElement('div'); date.className = 'event-date';
+      var m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(ev.start || '');
+      if (m) {
+        var mon = document.createElement('span'); mon.className = 'mon'; mon.textContent = MONTH_ABBR[Number(m[2]) - 1];
+        var day = document.createElement('span'); day.className = 'day'; day.textContent = String(Number(m[3]));
+        date.append(mon, day);
+      } else {
+        date.classList.add('tba'); date.textContent = 'Soon';
+      }
+      var body = document.createElement('div');
+      var h3 = document.createElement('h3');
+      if (ev.link) {
+        var a = document.createElement('a'); a.href = ev.link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ev.title;
+        h3.appendChild(a);
+      } else { h3.textContent = ev.title; }
+      body.appendChild(h3);
+      if (ev.when) { var w = document.createElement('p'); w.className = 'event-when'; w.textContent = ev.when; body.appendChild(w); }
+      var where = [ev.venue, ev.place].filter(Boolean).join(', ');
+      if (where) { var p = document.createElement('p'); p.className = 'event-where'; p.textContent = where; body.appendChild(p); }
+      li.append(date, body);
+      list.appendChild(li);
+    });
+  }
+
+  function loadEvents() {
+    $('events').innerHTML = ''; $('events-empty').hidden = true; $('events-loading').hidden = false;
+    if (!state.profile || !state.profile.zip) {
+      $('events-loading').hidden = true;
+      eventsEmpty(['Add your ZIP code to see events near you.']);
+      return;
+    }
+    db.functions.invoke('local-events', { method: 'GET' }).then(function (r) {
+      $('events-loading').hidden = true;
+      if (r.error) { eventsEmpty(['We couldn’t load events right now.', 'Try again in a few minutes.']); return; }
+      var events = (r.data && r.data.events) || [];
+      if (r.data && r.data.configured === false) { eventsEmpty(['Events are almost ready.', 'The events service still needs its key.']); return; }
+      if (!events.length) { eventsEmpty(['No upcoming events found nearby yet.', 'Check back tomorrow.']); return; }
+      renderEvents(events);
+    });
+  }
+
   function loadProfile() {
     return db.from('profiles').select('display_name, zip, nearby_places').eq('id', state.user.id).maybeSingle()
       .then(function (r) {
@@ -409,7 +463,7 @@
       f.reset(); hint.textContent = 'Updated.'; hint.className = 'hint ok';
       if (moved) { $('places-hint').textContent = 'Pick up to 5 cities near your new ZIP.'; $('places-hint').className = 'hint'; }
       return renderPlace().then(function () {
-        loadNews();
+        loadNews(); loadEvents();
         return loadNearbyOptions().then(function () {
           if (!moved) return;
           var picker = $('places-picker');
@@ -511,7 +565,7 @@
       $('places-picker').open = false;
       hint.textContent = places.length ? 'Saved. Adding their news\u2026' : 'Saved.';
       hint.className = 'hint ok';
-      loadNews();
+      loadNews(); loadEvents();
     }).catch(function () {
       hint.textContent = 'Couldn\u2019t save. Try again.'; hint.className = 'hint bad';
     }).finally(function () { btn.disabled = false; });
@@ -539,7 +593,7 @@
     show($('top-settings'), !!state.user);
     document.body.classList.toggle('signed-in', !!state.user);
     if (!state.user) { state.profile = null; setStreetZip(''); return; }
-    loadProfile().then(renderPlace).then(function () { loadNews(); loadNearbyOptions(); });
+    loadProfile().then(renderPlace).then(function () { loadNews(); loadEvents(); loadNearbyOptions(); });
   }
 
   var lastUserId;

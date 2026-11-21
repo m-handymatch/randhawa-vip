@@ -145,3 +145,42 @@ as $function$
 $function$;
 revoke execute on function public.nearby_cities(text, integer) from public, anon;
 grant execute on function public.nearby_cities(text, integer) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Local events (Google Events via SerpApi), used by the local-events edge function
+-- ---------------------------------------------------------------------------
+create table if not exists public.local_events_cache (
+  area_key    text primary key,          -- e.g. 'novato|CA'
+  city        text not null,
+  state       text not null,
+  events      jsonb not null default '[]',
+  fetched_at  timestamptz not null default now()
+);
+alter table public.local_events_cache enable row level security;
+grant select, insert, update, delete on public.local_events_cache to service_role;
+
+-- SerpApi searches used per month, to stay inside the free plan
+create table if not exists public.serpapi_usage (
+  month     text primary key,             -- 'YYYY-MM' (UTC)
+  searches  integer not null default 0
+);
+alter table public.serpapi_usage enable row level security;
+grant select, insert, update on public.serpapi_usage to service_role;
+
+-- Takes one search from this month's budget; false when the budget is used up.
+create or replace function public.take_serpapi_search(p_limit integer)
+returns boolean language plpgsql security invoker set search_path = public
+as $$
+declare
+  m text := to_char(now() at time zone 'utc', 'YYYY-MM');
+  used integer;
+begin
+  insert into serpapi_usage (month, searches) values (m, 1)
+  on conflict (month) do update set searches = serpapi_usage.searches + 1
+    where serpapi_usage.searches < p_limit
+  returning searches into used;
+  return used is not null;
+end;
+$$;
+revoke execute on function public.take_serpapi_search(integer) from public, anon, authenticated;
+grant execute on function public.take_serpapi_search(integer) to service_role;

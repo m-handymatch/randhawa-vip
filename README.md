@@ -80,3 +80,12 @@ The dashboard shows a card for the signed-in person's city, loaded in their brow
 - **Map**: an OpenStreetMap embed centred on the ZIP's ZCTA centroid, credited to OpenStreetMap contributors. OSM's free tiles are for light use; switch to a paid tile provider if the site goes public with real traffic.
 
 Photos from city websites aren't used: state and local government works can be copyrighted.
+
+## Upcoming events
+
+The left column under the city card lists upcoming events for the home city and the nearby cities on the profile, from the `local-events` edge function.
+
+- **Source:** Google Events results through [SerpApi](https://serpapi.com) (`engine=google_events`, query "Events in City, State"). Each event links to its source.
+- **Key:** the secret `SERPAPI_KEY` (Supabase dashboard → Edge Functions → Secrets).
+- **Staying free:** SerpApi's free plan is 250 searches a month. Each city is searched at most once a day (`EVENTS_CACHE_HOURS`, default 24) and saved in `local_events_cache`. Every search also takes a slot from a monthly budget in `serpapi_usage` (`EVENTS_MONTHLY_LIMIT`, default 240). When the budget runs out, the saved results are shown until next month.
+- Up to 20 events, the next ones first; past events are dropped.
