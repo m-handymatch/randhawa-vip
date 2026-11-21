@@ -17,6 +17,7 @@ const MAX_ARTICLES = 10;
 const ALLOWED_ORIGINS = new Set([
   "https://randhawa.vip",
   "https://www.randhawa.vip",
+  "https://m-handymatch.github.io",   // GitHub Pages, until randhawa.vip points at the site
 ]);
 
 const STATE_NAMES: Record<string, string> = {

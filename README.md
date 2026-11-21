@@ -36,8 +36,24 @@ const res = await fetch('https://pipzvzxcfvsxyiwmqpyv.supabase.co/functions/v1/l
 const { location, articles } = await res.json();
 ```
 
+## The website
+
+`index.html`, `assets/style.css`, `assets/app.js`: a plain static site, no build step.
+
+- Signed out: sign up (first name, ZIP, email, password) or sign in. The ZIP is checked as you type and shows the city.
+- Signed in: a street of houses with yours lit up and your ZIP on the mailbox, a greeting, your neighborhood, a box to change your ZIP, and local headlines that link to the original stories.
+
+### Publish it (GitHub Pages)
+
+1. Repo **Settings → Pages** → Deploy from a branch → `main`, `/ (root)` → Save.
+2. Site appears at `https://m-handymatch.github.io/randhawa-vip/`.
+3. In Supabase (zip-zcta project) → **Authentication → URL Configuration**: set **Site URL** to the site's address and add it under **Redirect URLs**, so the confirmation email link brings people back to the site.
+
+To use the randhawa.vip domain later: add it under Settings → Pages → Custom domain, point the DNS records GitHub shows, then update the Site URL in Supabase.
+
 ## Files
 
+- `index.html`, `assets/`: the website
 - `supabase/schema.sql`: tables, security rules and sign-up trigger (already applied)
 - `supabase/functions/local-news/index.ts`: the Edge Function (already deployed)
 
