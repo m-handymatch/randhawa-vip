@@ -90,7 +90,7 @@ The left column under the city card lists upcoming events for the home city and 
 - **Staying free:** SerpApi's free plan is 250 searches a month. Each city is searched at most once a day (`EVENTS_CACHE_HOURS`, default 24) and saved in `local_events_cache`. Every search also takes a slot from a monthly budget in `serpapi_usage` (`EVENTS_MONTHLY_LIMIT`, default 240). When the budget runs out, the saved results are shown until next month.
 - Up to 20 events, the next ones first; past events are dropped.
 
-## Around your city: weather, alerts, air, quakes, county, schools, home values
+## Around your city: weather, alerts, air, quakes, county, home values
 
 All loaded in the visitor's browser from free public sources (no keys), except home values:
 
@@ -98,5 +98,4 @@ All loaded in the visitor's browser from free public sources (no keys), except h
 - **Air quality:** US AQI from [Open-Meteo](https://open-meteo.com/) (CC BY 4.0).
 - **Earthquakes:** USGS, magnitude 2.5+ within 100 km (about 60 miles) in the last 7 days.
 - **County:** the city's county, county seat and county website from Wikidata.
-- **Public schools:** open, non-virtual public schools in the home ZIP from NCES's Common Core of Data (School Characteristics, current year), linked to NCES's school pages.
 - **Home values:** Zillow Home Value Index (typical home value and 12-month change) per city, shown in the Open houses list. The GitHub Action `.github/workflows/home-values.yml` downloads Zillow Research's public ZHVI CSVs on the 20th of each month and writes small per-state files to `public/data/home-values/` (run it by hand from the Actions tab anytime). Zillow requires clear attribution, which the page shows.

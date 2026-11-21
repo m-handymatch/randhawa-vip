@@ -543,46 +543,6 @@
     }).catch(function () { if (token === aboutToken) $('quake-main').textContent = 'Unavailable'; });
   }
 
-  // ---------- Public schools in the home ZIP (NCES Common Core of Data) ----------
-  var SCHOOL_ORDER = { 'Elementary': 1, 'Middle': 2, 'High': 3, 'Secondary': 3, 'Other': 5 };
-  function grade(g) { g = String(g || '').trim(); return g === 'KG' ? 'K' : g === 'PK' ? 'PreK' : g.replace(/^0/, ''); }
-  function loadSchools(zip) {
-    var box = $('schools'), list = $('school-list');
-    list.innerHTML = ''; box.hidden = true;
-    if (!zip) return;
-    var url = 'https://services1.arcgis.com/Ua5sjt3LWTPigjyD/ArcGIS/rest/services/School_Characteristics_Current/FeatureServer/1/query?' + qs({
-      where: "LZIP='" + zip + "' AND SY_STATUS_TEXT='Open' AND VIRTUAL<>'Full Virtual'",
-      outFields: 'SCH_NAME,GSLO,GSHI,SCHOOL_LEVEL,TOTAL,LSTREET1,CHARTER_TEXT,NCESSCH,SURVYEAR',
-      returnGeometry: 'false', resultRecordCount: 60, f: 'json'
-    });
-    getJSON(url).then(function (r) {
-      if (zip !== (state.profile && state.profile.zip)) return;
-      var rows = (r.features || []).map(function (f) { return f.attributes || {}; });
-      if (!rows.length) return;
-      rows.sort(function (a, b) {
-        return (SCHOOL_ORDER[a.SCHOOL_LEVEL] || 4) - (SCHOOL_ORDER[b.SCHOOL_LEVEL] || 4) || String(a.SCH_NAME).localeCompare(String(b.SCH_NAME));
-      });
-      rows.forEach(function (a) {
-        var li = document.createElement('li'); li.className = 'school';
-        var name = /^\d{12}$/.test(String(a.NCESSCH))
-          ? link('https://nces.ed.gov/ccd/schoolsearch/school_detail.asp?ID=' + a.NCESSCH, a.SCH_NAME)
-          : document.createTextNode(a.SCH_NAME);
-        var h = document.createElement('span'); h.className = 'school-name'; h.appendChild(name);
-        var meta = [];
-        if (a.GSLO && a.GSHI) meta.push('Grades ' + grade(a.GSLO) + '–' + grade(a.GSHI));
-        if (a.TOTAL > 0) meta.push(Number(a.TOTAL).toLocaleString() + ' students');
-        if (a.CHARTER_TEXT === 'Yes') meta.push('Charter');
-        if (a.LSTREET1) meta.push(a.LSTREET1);
-        var m = document.createElement('span'); m.className = 'school-meta'; m.textContent = meta.join(' · ');
-        li.append(h, m); list.appendChild(li);
-      });
-      $('schools-title').textContent = 'Public schools in ' + zip;
-      $('schools-count').textContent = '(' + rows.length + ')';
-      if (rows[0].SURVYEAR) $('schools-year').textContent = String(rows[0].SURVYEAR).replace('-', '–');
-      box.hidden = false;
-    }).catch(function () {});
-  }
-
   // ---------- Home values (Zillow Research ZHVI, refreshed monthly into data/home-values/) ----------
   var hvCache = {};
   function homeValues(st) {
@@ -627,7 +587,6 @@
   function renderOpenHouses() {
     var list = $('oh-list'); list.innerHTML = ''; $('hv-credit').hidden = true;
     var p = state.profile;
-    if (p && p.zip !== loadSchools.lastZip) { loadSchools.lastZip = p && p.zip; loadSchools(p && p.zip); }
     if (!p || !p.zip) return;
     lookupZip(p.zip).then(function (home) {
       if (!home) return;
