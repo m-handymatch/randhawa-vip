@@ -181,7 +181,6 @@
       var strong = document.createElement('strong');
       strong.textContent = place ? titleCase(place.city) + ', ' + place.state : 'ZIP ' + p.zip;
       $('place').append('Your neighborhood: ', strong, place ? ' (' + p.zip + ')' : '');
-      $('news-title').textContent = place ? 'Around ' + titleCase(place.city) : 'Around the neighborhood';
       renderAbout(place);
     });
   }
