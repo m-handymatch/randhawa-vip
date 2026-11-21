@@ -619,7 +619,7 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 }
 
 /* Weather alerts in the city card, where the map was */
-.about-alert { display: flex; }
+.about-alert { display: flex; align-self: center; }
 .about-alert .tile { width: 100%; min-height: 128px; justify-content: center; }
 @media (min-width: 980px) and (max-width: 1140px) {
   .signed-in .top .wrap { column-gap: 16px; }
