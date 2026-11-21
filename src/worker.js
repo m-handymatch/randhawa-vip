@@ -1,11 +1,10 @@
 // LocalConnect Worker (localconnect.site; randhawa.vip is the old address).
 // Runs before every request.
 //
-// The site is open to everyone. To lock it to certain IP addresses again, set the
-// variable LOCK_TO_IPS in Cloudflare (Workers & Pages -> randhawa-vip -> Settings ->
+// The site is private while SITE_IS_PUBLIC (below) is false: only the addresses in the
+// variable LOCK_TO_IPS (or the older ALLOWED_IPS) can open it. Set it in Cloudflare (Workers & Pages -> randhawa-vip -> Settings ->
 // Variables and Secrets) to comma-separated addresses and/or ranges, e.g.
 //   "98.97.27.131"   or   "98.97.0.0/16, 2001:db8::/32"
-// (The old ALLOWED_IPS variable is no longer used and can be deleted.)
 //
 // Member pages: any <name>.localconnect.site shows member.html, which loads that member's page.
 // Needs a proxied DNS record for * and a Worker route for *.localconnect.site/* (see README).
@@ -13,6 +12,8 @@ const PRIMARY = 'localconnect.site';
 const OLD = 'randhawa.vip';
 // Set to true once localconnect.site is live, to send randhawa.vip visitors there.
 const REDIRECT_OLD = false;
+// Set to true to open the site to everyone.
+const SITE_IS_PUBLIC = false;
 
 function privatePage(ip) {
   const safeIp = String(ip || 'unknown').replace(/[^0-9a-fA-F:.]/g, '');
@@ -74,8 +75,10 @@ export function isAllowed(visitorIp, allowedList) {
 export default {
   async fetch(request, env) {
     const visitorIp = request.headers.get('CF-Connecting-IP');
-    const lock = String(env.LOCK_TO_IPS || '').trim();
-    if (lock && !isAllowed(visitorIp, lock)) {
+    // While SITE_IS_PUBLIC is false, only the IPs in LOCK_TO_IPS (or the older ALLOWED_IPS) get in;
+    // with neither set, everyone is blocked.
+    const lock = String(env.LOCK_TO_IPS || env.ALLOWED_IPS || '').trim();
+    if (!SITE_IS_PUBLIC && !isAllowed(visitorIp, lock)) {
       return new Response(privatePage(visitorIp), {
         status: 403,
         headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
