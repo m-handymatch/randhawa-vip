@@ -220,7 +220,7 @@
       if (i >= titles.length) return Promise.resolve(null);
       return getJSON('https://en.wikipedia.org/w/api.php?' + qs({
         action: 'query', format: 'json', formatversion: 2, origin: '*', redirects: 1, titles: titles[i],
-        prop: 'extracts|pageimages|pageprops|info|images', exintro: 1, explaintext: 1, exsentences: 10,
+        prop: 'extracts|pageimages|pageprops|info|images', explaintext: 1, exsectionformat: 'plain', exsentences: 14,
         piprop: 'name', pilicense: 'free', ppprop: 'wikibase_item|disambiguation', inprop: 'url', imlimit: 60
       })).then(function (r) {
         var pg = r && r.query && r.query.pages && r.query.pages[0];
@@ -364,7 +364,13 @@
         return;
       }
       $('about').hidden = false;
-      $('about-extract').textContent = pg.extract.replace(/\s*\([^()]*\)/, '').replace(/\s+/g, ' ').trim();
+      // The intro plus the start of the article (history, geography...), with
+      // section headings dropped, so short intros still fill the card.
+      var text = pg.extract.split(/\n+/).filter(function (line) {
+        line = line.trim();
+        return line && /[.!?]["')\]]?$/.test(line);
+      }).join(' ');
+      $('about-extract').textContent = text.replace(/\s*\([^()]*\)/, '').replace(/\s+/g, ' ').trim();
       fitExtract();
       var wikiUrl = safeUrl(pg.fullurl) || 'https://en.wikipedia.org/wiki/' + encodeURIComponent(pg.title.replace(/ /g, '_'));
       $('about-wiki-credit').href = wikiUrl;
