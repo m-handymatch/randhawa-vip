@@ -419,7 +419,52 @@
     });
   }
 
+  // ---------- Open houses: links to each site's own open-house search ----------
+  function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+
+  function zipForCity(city, st) {
+    return db.from('zip_zcta').select('zip').ilike('city', city).eq('state', st).eq('zip_type', 'ZIP Code Area')
+      .order('zip').limit(1).then(function (r) { return r.data && r.data[0] ? r.data[0].zip : null; })
+      .catch(function () { return null; });
+  }
+
+  function ohLink(href, text) {
+    var a = document.createElement('a'); a.href = href; a.textContent = text; a.target = '_blank'; a.rel = 'noopener'; a.className = 'oh-link';
+    return a;
+  }
+
+  function renderOpenHouses() {
+    var list = $('oh-list'); list.innerHTML = '';
+    var p = state.profile;
+    if (!p || !p.zip) return;
+    lookupZip(p.zip).then(function (home) {
+      if (!home) return;
+      var cities = [{ city: titleCase(home.city), st: home.state, zip: p.zip }];
+      (p.nearby_places || []).forEach(function (v) {
+        var m = String(v).match(/^(.*\S),\s*([A-Z]{2})$/);
+        cities.push({ city: m ? m[1] : v, st: m ? m[2] : home.state, zip: null });
+      });
+      return Promise.all(cities.map(function (c) {
+        return c.zip ? c : zipForCity(c.city, c.st).then(function (z) { c.zip = z; return c; });
+      }));
+    }).then(function (cities) {
+      if (!cities) return;
+      list.innerHTML = '';
+      cities.forEach(function (c) {
+        var li = document.createElement('li'); li.className = 'oh-row';
+        var name = document.createElement('span'); name.className = 'oh-city'; name.textContent = c.city;
+        var links = document.createElement('span'); links.className = 'oh-links';
+        links.appendChild(ohLink('https://www.zillow.com/' + slug(c.city) + '-' + c.st.toLowerCase() + '/open-house/', 'Zillow'));
+        if (c.zip) links.appendChild(ohLink('https://www.redfin.com/zipcode/' + c.zip + '/open-houses', 'Redfin'));
+        links.appendChild(ohLink('https://www.realtor.com/realestateandhomes-search/' + encodeURIComponent(c.city.replace(/ /g, '-')) + '_' + c.st + '/show-open-house', 'Realtor.com'));
+        li.append(name, links);
+        list.appendChild(li);
+      });
+    });
+  }
+
   function loadEvents() {
+    renderOpenHouses();
     $('events').innerHTML = ''; $('events-empty').hidden = true; $('events-loading').hidden = false;
     if (!state.profile || !state.profile.zip) {
       $('events-loading').hidden = true;
