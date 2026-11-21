@@ -322,9 +322,14 @@
     }).catch(function () { /* the card just shows what loaded */ });
   }
 
+  // Obituaries and death notices are left out (the server filters them too).
+  var OBITUARY = /obituar|\bobits?\b|in memoriam|passed away|death notice|funeral (home|service)|celebration of life|died peacefully|\blegacy\.com\b/i;
   function renderStories(articles) {
     var list = $('stories');
     list.innerHTML = '';
+    articles = articles.filter(function (a) {
+      return !OBITUARY.test([a.title, a.summary || '', a.source || '', a.link].join(' '));
+    });
     articles.forEach(function (a) {
       var li = document.createElement('li');
       li.className = 'story' + (a.image ? '' : ' no-image');

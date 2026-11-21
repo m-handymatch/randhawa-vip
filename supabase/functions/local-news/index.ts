@@ -189,6 +189,12 @@ function normalizedTitle(t: string): string {
 
 const newestFirst = (x: Article, y: Article) => (y.published ?? "").localeCompare(x.published ?? "");
 
+// Obituaries and death notices are left out of the feed.
+const OBITUARY = /obituar|\bobits?\b|in memoriam|passed away|death notice|funeral (home|service)|celebration of life|died peacefully|\blegacy\.com\b/i;
+export function isObituary(a: Article): boolean {
+  return OBITUARY.test(`${a.title} ${a.summary ?? ""} ${a.source ?? ""} ${a.link}`);
+}
+
 // Merge places fairly: each place gets an equal share of the list first,
 // then any spare room goes to the newest leftovers. Duplicates are dropped.
 function mergeArticles(lists: Article[][]): Article[] {
@@ -196,6 +202,7 @@ function mergeArticles(lists: Article[][]): Article[] {
   const perPlace = lists.map((list) => {
     const unique: Article[] = [];
     for (const a of [...list].sort(newestFirst)) {
+      if (isObituary(a)) continue;
       const key = normalizedTitle(a.title);
       if (!key || seen.has(key) || seen.has(a.link)) continue;
       seen.add(key); seen.add(a.link);
