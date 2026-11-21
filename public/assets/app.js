@@ -597,8 +597,107 @@
     });
   }
 
+  // ---------- Farmers markets: USDA directory, in 1-degree tiles ----------
+  var MARKET_MILES = 6, MARKETS_SHOWN = 3, marketsToken = 0, marketTiles = {};
+  function marketTile(key) {
+    if (!marketTiles[key]) {
+      marketTiles[key] = fetch('data/farmers-markets/' + key + '.json')
+        .then(function (r) { return r.ok ? r.json() : { markets: [] }; })
+        .then(function (j) { return j.markets || []; })
+        .catch(function () { return []; });
+    }
+    return marketTiles[key];
+  }
+  function miles(aLat, aLon, bLat, bLon) {
+    var R = 3958.8, toR = Math.PI / 180;
+    var dLat = (bLat - aLat) * toR, dLon = (bLon - aLon) * toR;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(aLat * toR) * Math.cos(bLat * toR) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  function renderMarkets(cities) {
+    var token = ++marketsToken, box = $('markets');
+    box.hidden = true; $('markets-list').innerHTML = '';
+    Promise.all(cities.map(function (c) {
+      return centroid(c.zip).then(function (p) {
+        return p ? { city: c.city, lat: Number(p.lat), lon: Number(p.lon) } : null;
+      });
+    })).then(function (pts) {
+      pts = pts.filter(Boolean);
+      var keys = {};
+      var pad = MARKET_MILES / 69;
+      pts.forEach(function (p) {
+        [-pad, pad].forEach(function (dy) {
+          [-pad, pad].forEach(function (dx) {
+            keys[Math.floor(p.lat + dy) + '_' + Math.floor(p.lon + dx / Math.cos(p.lat * Math.PI / 180))] = 1;
+          });
+        });
+      });
+      return Promise.all(Object.keys(keys).map(marketTile)).then(function (tiles) {
+        if (token !== marketsToken) return;
+        var seen = {}, found = [];
+        [].concat.apply([], tiles).forEach(function (m) {
+          if (seen[m.id]) return; seen[m.id] = 1;
+          var best = null;
+          pts.forEach(function (p, i) {
+            var d = miles(p.lat, p.lon, m.lat, m.lon);
+            if (d <= MARKET_MILES && (!best || d < best.d)) best = { d: d, i: i, city: p.city };
+          });
+          if (best) found.push({ m: m, near: best });
+        });
+        // Home city first, then the nearby cities in the order picked; closest first within each.
+        found.sort(function (a, b) { return a.near.i - b.near.i || a.near.d - b.near.d; });
+        drawMarkets(found);
+      });
+    });
+  }
+  function drawMarkets(found) {
+    var box = $('markets'), list = $('markets-list'), more = $('markets-more');
+    list.innerHTML = '';
+    if (!found.length) { box.hidden = true; return; }
+    $('markets-count').textContent = found.length + ' nearby';
+    found.forEach(function (f, i) {
+      var m = f.m;
+      var li = document.createElement('li'); li.className = 'market';
+      if (i >= MARKETS_SHOWN) li.hidden = true;
+      var h = document.createElement('h4');
+      var a = document.createElement('a');
+      a.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(m.name + ', ' + m.addr);
+      a.target = '_blank'; a.rel = 'noopener'; a.textContent = m.name;
+      h.appendChild(a);
+      var where = document.createElement('p'); where.className = 'market-where';
+      where.textContent = m.addr.replace(/\s+,/g, ',').replace(/\s{2,}/g, ' ');
+      var meta = document.createElement('p'); meta.className = 'market-meta';
+      var near = document.createElement('span'); near.className = 'market-near';
+      near.textContent = f.near.d < 1 ? f.near.city : f.near.d.toFixed(1) + ' mi from ' + f.near.city;
+      meta.appendChild(near);
+      if (m.ebt) { var e = document.createElement('span'); e.className = 'market-tag'; e.textContent = 'SNAP/EBT'; meta.appendChild(e); }
+      if (m.organic) { var o = document.createElement('span'); o.className = 'market-tag'; o.textContent = 'Organic'; meta.appendChild(o); }
+      li.append(h, where);
+      if (m.about) {
+        var ab = document.createElement('p'); ab.className = 'market-about';
+        ab.textContent = m.about; li.appendChild(ab);
+      }
+      li.appendChild(meta);
+      list.appendChild(li);
+    });
+    var hidden = found.length - MARKETS_SHOWN;
+    more.hidden = hidden <= 0;
+    more.textContent = 'Show ' + hidden + ' more';
+    more.setAttribute('aria-expanded', 'false');
+    box.hidden = false;
+  }
+  $('markets-more').addEventListener('click', function () {
+    var open = this.getAttribute('aria-expanded') !== 'true';
+    var rows = $('markets-list').children, n = 0;
+    for (var i = MARKETS_SHOWN; i < rows.length; i++) { rows[i].hidden = !open; n++; }
+    this.setAttribute('aria-expanded', String(open));
+    this.textContent = open ? 'Show fewer' : 'Show ' + n + ' more';
+  });
+
   function renderOpenHouses() {
     var list = $('oh-list'); list.innerHTML = ''; $('hv-credit').hidden = true;
+    $('markets').hidden = true; marketsToken++;
     var p = state.profile;
     if (!p || !p.zip) return;
     lookupZip(p.zip).then(function (home) {
@@ -626,6 +725,7 @@
         list.appendChild(li);
       });
       renderSales(cities);
+      renderMarkets(cities);
       return homeValues(cities[0].st).then(function (hv) {
         if (!hv) return;
         var any = false;

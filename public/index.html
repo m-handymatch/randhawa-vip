@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20261121p">
+  <link rel="stylesheet" href="assets/style.css?v=20261121q">
   <link rel="icon" href="assets/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
@@ -186,6 +186,15 @@
             <p class="note" id="events-note">Around you and your nearby cities.</p>
           </header>
           <div class="panel-body" tabindex="0" aria-label="Local events list">
+            <div class="markets" id="markets" hidden>
+              <div class="markets-head">
+                <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l2-5h14l2 5M4 10v9h16v-9M3 10h18M9 19v-5h6v5"/></svg>Farmers markets</h3>
+                <span class="markets-count" id="markets-count"></span>
+              </div>
+              <ul class="markets-list" id="markets-list"></ul>
+              <button type="button" class="markets-more" id="markets-more" hidden></button>
+              <p class="markets-credit">From the <a href="https://www.usdalocalfoodportal.com/fe/fdirectory_farmersmarket/" target="_blank" rel="noopener">USDA Farmers Market Directory</a>. Many markets are seasonal, so check hours before you go.</p>
+            </div>
             <p class="loading" id="events-loading" role="status">Looking for events nearby…</p>
             <ul class="events" id="events"></ul>
             <div class="empty" id="events-empty" hidden></div>
@@ -307,7 +316,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="assets/app.js?v=20261121p"></script>
-<script src="assets/forum.js?v=20261121p"></script>
+<script src="assets/app.js?v=20261121q"></script>
+<script src="assets/forum.js?v=20261121q"></script>
 </body>
 </html>

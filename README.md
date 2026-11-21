@@ -120,3 +120,7 @@ All loaded in the visitor's browser from free public sources (no keys), except h
 - Cloudflare for localconnect.site: Worker custom domain `localconnect.site` (+ `www.localconnect.site`), DNS `AAAA *` → `100::` proxied, Worker route `*.localconnect.site/*`.
 - Supabase: Authentication → URL Configuration: Site URL `https://localconnect.site`, redirect URLs `https://localconnect.site/**`. Custom SMTP is required for public sign-ups (the built-in sender only emails the project's team).
 - Pages: `rules.html` (house rules), `privacy.html` (privacy).
+
+## Farmers markets
+
+The top of the Local events box lists farmers markets within 6 miles of the home city and the picked nearby cities. The data is the USDA National Farmers Market Directory (USDA AMS Local Food Portal export), refreshed every Monday by `.github/workflows/farmers-markets.yml` (`scripts/farmers_markets.py`) into `public/data/farmers-markets/{lat}_{lon}.json`, one file per 1-degree square. Duplicate listings within about 250 m keep the most recently updated one. The directory has no reliable hours, so the box asks people to check before they go.
