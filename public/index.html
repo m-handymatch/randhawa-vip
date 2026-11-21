@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20261121zb">
+  <link rel="stylesheet" href="assets/style.css?v=20261121zc">
   <link rel="icon" href="assets/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
@@ -161,6 +161,48 @@
               <span class="tile-main" id="alert-main">…</span>
               <span class="tile-sub" id="alert-sub"></span>
             </a>
+            <div class="homepage">
+              <button type="button" class="hp-btn" id="hp-btn" aria-expanded="false" aria-controls="hp-help">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5M10 20v-5.5h4V20"/></svg>Make this your home page
+              </button>
+              <div class="hp-help" id="hp-help" role="dialog" aria-label="Make this your home page" hidden>
+                <div class="hp-tabs" role="tablist">
+                  <button type="button" role="tab" data-hp="chrome">Chrome</button>
+                  <button type="button" role="tab" data-hp="edge">Edge</button>
+                  <button type="button" role="tab" data-hp="safari">Safari</button>
+                  <button type="button" role="tab" data-hp="firefox">Firefox</button>
+                </div>
+                <ol class="hp-steps" data-hp-steps="chrome">
+                  <li>Open <b>Settings</b>, then <b>On startup</b>.</li>
+                  <li>Choose <b>Open a specific page or set of pages</b>, then <b>Add a new page</b>.</li>
+                  <li>Paste this site's address and select <b>Add</b>.</li>
+                </ol>
+                <ol class="hp-steps" data-hp-steps="edge" hidden>
+                  <li>Open <b>Settings</b>, then <b>Start, home, and new tabs</b>.</li>
+                  <li>Under <b>When Edge starts</b>, choose <b>Open these pages</b>, then <b>Add a new page</b>.</li>
+                  <li>Paste this site's address and select <b>Add</b>.</li>
+                </ol>
+                <ol class="hp-steps" data-hp-steps="safari" hidden>
+                  <li>Open <b>Safari</b>, then <b>Settings</b>, then <b>General</b>.</li>
+                  <li>Next to <b>Homepage</b>, select <b>Set to Current Page</b>.</li>
+                  <li>Set <b>New windows open with</b> to <b>Homepage</b>.</li>
+                </ol>
+                <ol class="hp-steps" data-hp-steps="firefox" hidden>
+                  <li>Open <b>Settings</b>, then <b>Home</b>.</li>
+                  <li>Set <b>Homepage and new windows</b> to <b>Custom URLs</b>.</li>
+                  <li>Paste this site's address.</li>
+                </ol>
+                <div class="hp-copy">
+                  <button type="button" id="hp-copy">Copy this site's address</button>
+                  <span id="hp-copied" role="status"></span>
+                </div>
+              </div>
+              <p class="hp-links"><span>Go to</span>
+                <a href="https://www.msn.com/" target="_blank" rel="noopener">MSN</a>
+                <a href="https://www.google.com/" target="_blank" rel="noopener">Google</a>
+                <a href="https://www.yahoo.com/" target="_blank" rel="noopener">Yahoo</a>
+              </p>
+            </div>
           </div>
         </article>
       </div>
@@ -325,7 +367,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="assets/app.js?v=20261121zb"></script>
-<script src="assets/forum.js?v=20261121zb"></script>
+<script src="assets/app.js?v=20261121zc"></script>
+<script src="assets/forum.js?v=20261121zc"></script>
 </body>
 </html>

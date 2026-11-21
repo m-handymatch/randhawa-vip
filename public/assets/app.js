@@ -734,6 +734,39 @@
     }, { passive: false });
   })();
 
+  // ---------- Make this your home page ----------
+  // Browsers don't let a site set itself as the home page, so this shows the
+  // steps for the visitor's browser and copies the address.
+  (function homePage() {
+    var btn = $('hp-btn'), help = $('hp-help');
+    if (!btn || !help) return;
+    var ua = navigator.userAgent;
+    var mine = /Edg\//.test(ua) ? 'edge' : /Firefox\//.test(ua) ? 'firefox' :
+      (/Safari\//.test(ua) && !/Chrome\/|Chromium\//.test(ua)) ? 'safari' : 'chrome';
+    function pick(name) {
+      help.querySelectorAll('[data-hp]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.hp === name)); });
+      help.querySelectorAll('[data-hp-steps]').forEach(function (ol) { ol.hidden = ol.dataset.hpSteps !== name; });
+    }
+    function setOpen(open) {
+      help.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+      if (open) { pick(mine); $('hp-copied').textContent = ''; }
+    }
+    btn.addEventListener('click', function () { setOpen(help.hidden); });
+    help.querySelectorAll('[data-hp]').forEach(function (b) { b.addEventListener('click', function () { pick(b.dataset.hp); }); });
+    $('hp-copy').addEventListener('click', function () {
+      var url = location.origin + '/';
+      var done = function () { $('hp-copied').textContent = 'Copied ' + url; };
+      if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, function () { $('hp-copied').textContent = url; });
+      else $('hp-copied').textContent = url;
+    });
+    document.addEventListener('click', function (e) {
+      if (!help.hidden && !help.contains(e.target) && !btn.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !help.hidden) { setOpen(false); btn.focus(); }
+    });
+  })();
+
   $('markets-more').addEventListener('click', function () {
     var open = this.getAttribute('aria-expanded') !== 'true';
     var rows = $('markets-list').children, n = 0;
