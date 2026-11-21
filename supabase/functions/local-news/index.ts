@@ -69,21 +69,34 @@ async function fetchNews(apiKey: string, city: string, state: string): Promise<A
   const base = "https://newsdata.io/api/1/latest";
   const common = { apikey: apiKey, country: "us", language: "en", removeduplicate: "1" };
 
-  // First try NewsData's region filter (city-state-country); fall back to a keyword search.
+  // Several ways to ask; the region filter isn't honored on every plan, so every
+  // result is kept only if it actually mentions the city.
   const attempts = [
+    { ...common, qInTitle: `"${city}"` },
     { ...common, region: `${city.toLowerCase()}-${stateName}-united states of america` },
-    { ...common, q: `"${city}" AND "${stateName}"` },
+    { ...common, q: `"${city}"` },
   ];
 
+  const cityLower = city.toLowerCase();
+  const mentionsCity = (a: Article) =>
+    a.title.toLowerCase().includes(cityLower) || (a.summary ?? "").toLowerCase().includes(cityLower);
+
+  const found: Article[] = [];
+  const seen = new Set<string>();
   for (const params of attempts) {
     const res = await fetch(`${base}?${new URLSearchParams(params)}`);
     if (!res.ok) continue;
     const body = await res.json().catch(() => null);
     if (body?.status !== "success" || !Array.isArray(body.results)) continue;
-    const articles = body.results.map(tidy).filter(Boolean) as Article[];
-    if (articles.length) return articles.slice(0, MAX_ARTICLES);
+    for (const a of body.results.map(tidy).filter(Boolean) as Article[]) {
+      if (!mentionsCity(a) || seen.has(a.link) || seen.has(a.title)) continue;
+      seen.add(a.link); seen.add(a.title);
+      found.push(a);
+    }
+    if (found.length >= MAX_ARTICLES) break;
   }
-  return [];
+  found.sort((x, y) => (y.published ?? "").localeCompare(x.published ?? ""));
+  return found.slice(0, MAX_ARTICLES);
 }
 
 Deno.serve(async (req) => {
