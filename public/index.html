@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20261121o">
+  <link rel="stylesheet" href="assets/style.css?v=20261121p">
   <link rel="icon" href="assets/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
@@ -32,6 +32,10 @@
         <button class="btn btn-quiet btn-small" id="signout" type="button" hidden>Sign out</button>
       </div>
     </div>
+    <nav class="top-auth" id="top-auth" aria-label="Account">
+      <button class="btn btn-small btn-outline-light" type="button" data-show="signin">Sign in</button>
+      <button class="btn btn-small" type="button" data-show="signup">Join free</button>
+    </nav>
     <div class="settings top-settings" id="top-settings" hidden>
       <form class="zip-form" id="zip-form" novalidate>
         <label for="zip-change">Change ZIP</label>
@@ -73,15 +77,38 @@
 
   <!-- Signed out -->
   <section id="welcome" hidden>
-    <div class="hero">
-      <div class="wrap hero-grid">
-        <div>
+    <div class="welcome">
+      <div class="wrap welcome-grid">
+        <div class="welcome-copy">
           <h1>Hello, neighbor.</h1>
-          <p class="lead">Tell us your ZIP code and see what's happening around the corner, all in one place.</p>
+          <p class="lead">Your city's news, events, weather and neighbors, together on one calm page.</p>
+          <ul class="feats">
+            <li><span class="feat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/></svg></span><div><strong>Local news</strong><span>Headlines from your city and up to five nearby cities.</span></div></li>
+            <li><span class="feat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span><div><strong>Local events</strong><span>Markets, shows and community happenings around you.</span></div></li>
+            <li><span class="feat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><div><strong>Neighborhood forum</strong><span>Ask for recommendations, share news, find lost pets, and get your own page.</span></div></li>
+          </ul>
         </div>
 
-        <div class="card" id="auth-card">
-          <div id="signup-panel">
+        <div class="card auth-card" id="auth-card">
+          <div class="auth-tabs" role="tablist" aria-label="Sign in or join">
+            <button type="button" role="tab" class="auth-tab is-on" data-show="signin" aria-selected="true">Sign in</button>
+            <button type="button" role="tab" class="auth-tab" data-show="signup" aria-selected="false">Join free</button>
+          </div>
+          <div id="signin-panel">
+            <h2>Welcome back</h2>
+            <form id="signin-form" novalidate>
+              <label>Email
+                <input name="email" type="email" autocomplete="email" required>
+              </label>
+              <label>Password
+                <input name="password" type="password" autocomplete="current-password" required>
+              </label>
+              <button class="btn" type="submit">Sign in</button>
+              <div class="message" id="signin-message" role="status" hidden></div>
+            </form>
+            <p class="switch">New here? <button class="linkish" type="button" data-show="signup">Join your neighborhood</button></p>
+          </div>
+          <div id="signup-panel" hidden>
             <h2>Join your neighborhood</h2>
             <p class="sub">Free. We only use your ZIP code to find local news.</p>
             <form id="signup-form" novalidate>
@@ -106,24 +133,8 @@
             <p class="switch">Already joined? <button class="linkish" type="button" data-show="signin">Sign in</button></p>
           </div>
 
-          <div id="signin-panel" hidden>
-            <h2>Welcome back</h2>
-            <form id="signin-form" novalidate>
-              <label>Email
-                <input name="email" type="email" autocomplete="email" required>
-              </label>
-              <label>Password
-                <input name="password" type="password" autocomplete="current-password" required>
-              </label>
-              <button class="btn" type="submit">Sign in</button>
-              <div class="message" id="signin-message" role="status" hidden></div>
-            </form>
-            <p class="switch">New here? <button class="linkish" type="button" data-show="signup">Join your neighborhood</button></p>
-          </div>
         </div>
       </div>
-      <div class="hero-street" data-street></div>
-      <div class="ground" aria-hidden="true"></div>
     </div>
   </section>
 
@@ -296,7 +307,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="assets/app.js?v=20261121o"></script>
-<script src="assets/forum.js?v=20261121o"></script>
+<script src="assets/app.js?v=20261121p"></script>
+<script src="assets/forum.js?v=20261121p"></script>
 </body>
 </html>

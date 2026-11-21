@@ -630,3 +630,46 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 
 /* Box subtitles stay on one line so the three boxes line up; hover shows the full text */
 .panel-head .note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ==========================================================================
+   Signed-out page: navy header with Sign in / Join, welcome + sign-in card
+   ========================================================================== */
+.top { background: var(--ink); color: #fff; border-bottom: 5px solid var(--leaf); }
+.top .brand-name { color: #fff; }
+.top .brand-name span { color: #8FD16F; }
+.top .brand-tag { color: #C9D6E8; }
+.top .brand-mark { box-shadow: 0 0 0 3px rgba(255, 255, 255, .9); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.top-auth { display: flex; gap: 10px; align-items: center; }
+.signed-in .top-auth { display: none; }
+.btn-outline-light { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .75); box-shadow: none; }
+.btn-outline-light:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+
+.welcome { padding: 48px 0 64px; }
+.welcome-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 56px; align-items: start; }
+.welcome-copy h1 { font-size: clamp(40px, 5.5vw, 64px); letter-spacing: -0.02em; }
+.welcome-copy .lead { margin-top: 14px; font-size: 20px; color: var(--ink-soft); max-width: 32ch; }
+.feats { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 14px; max-width: 520px; }
+.feats li { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; background: #fff; border: 1px solid var(--line); border-radius: 16px; }
+.feats strong { display: block; font-family: var(--display); font-size: 19px; font-weight: 600; }
+.feats li div span { display: block; color: var(--ink-soft); font-size: 15px; line-height: 1.45; margin-top: 2px; }
+.feat-icon { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; flex: none; background: var(--ink); color: #fff; }
+.feats li:nth-child(2) .feat-icon { background: var(--teal); }
+.feats li:nth-child(3) .feat-icon { background: #6B4FA0; }
+.feat-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.auth-card { padding: 0; overflow: hidden; border-radius: 20px; border-top: 5px solid var(--leaf); }
+.auth-card > div[id$="-panel"] { padding: 22px 26px 24px; }
+.auth-card h2 { font-size: 26px; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; background: #F3F7F4; border-bottom: 1px solid var(--line); }
+.auth-tab { border: 0; background: transparent; padding: 14px 10px; font: 700 16px var(--body); color: var(--ink-soft); cursor: pointer; border-bottom: 3px solid transparent; }
+.auth-tab.is-on { background: #fff; color: var(--ink); border-bottom-color: var(--forest); }
+.auth-tab:focus-visible { outline: 3px solid var(--marigold); outline-offset: -3px; }
+@media (max-width: 860px) {
+  .welcome-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .welcome { padding-top: 28px; }
+  .auth-card { order: -1; }
+}
+@media (max-width: 520px) {
+  .top-auth { display: none; }
+}

@@ -118,6 +118,10 @@
       var which = b.getAttribute('data-show');
       show($('signup-panel'), which === 'signup');
       show($('signin-panel'), which === 'signin');
+      document.querySelectorAll('.auth-tab').forEach(function (t) {
+        var on = t.getAttribute('data-show') === which;
+        t.classList.toggle('is-on', on); t.setAttribute('aria-selected', String(on));
+      });
       var first = $(which + '-panel').querySelector('input');
       if (first) first.focus();
     });
