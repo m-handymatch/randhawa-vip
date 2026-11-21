@@ -503,20 +503,39 @@
 
     getJSON('https://api.weather.gov/alerts/active?point=' + pt).then(function (r) {
       if (token !== aboutToken) return;
-      var feats = (r.features || []).slice(0, 3);
-      var box = $('wx-alerts'); box.innerHTML = '';
-      if (!feats.length) return;
-      feats.forEach(function (ft) {
-        var pr = ft.properties || {};
-        var row = document.createElement('p');
-        var strong = document.createElement('strong'); strong.textContent = pr.event || 'Weather alert';
-        row.appendChild(strong);
-        row.append(untilText(pr.ends || pr.expires));
-        if (pr.areaDesc) row.title = pr.headline || pr.areaDesc;
-        box.appendChild(row);
+      var box = $('wx-alerts'); box.innerHTML = ''; box.className = 'alert-banner';
+      var seen = {};
+      var feats = (r.features || []).map(function (ft) { return ft.properties || {}; }).filter(function (pr) {
+        var k = pr.event || ''; if (!k || seen[k]) return false; seen[k] = true; return true;
       });
-      var more = link($('wx-tile').href, 'Details from the National Weather Service');
-      var p = document.createElement('p'); p.appendChild(more); box.appendChild(p);
+      if (!feats.length) return;
+      // Most serious first: warnings, then watches, then advisories and statements.
+      function level(ev) { return /warning/i.test(ev) ? 'warning' : /watch/i.test(ev) ? 'watch' : 'advisory'; }
+      var rank = { warning: 0, watch: 1, advisory: 2 };
+      feats.sort(function (x, y) { return rank[level(x.event)] - rank[level(y.event)]; });
+      var top = level(feats[0].event);
+      box.classList.add('is-' + top);
+
+      var icon = document.createElement('span'); icon.className = 'alert-icon'; icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>';
+      var main = document.createElement('div'); main.className = 'alert-main';
+      var title = document.createElement('p'); title.className = 'alert-title';
+      title.textContent = feats.length === 1 ? 'Weather alert for your area' : feats.length + ' weather alerts for your area';
+      var chips = document.createElement('ul'); chips.className = 'alert-chips';
+      feats.slice(0, 4).forEach(function (pr) {
+        var li = document.createElement('li'); li.className = 'alert-chip ' + level(pr.event);
+        var ev = document.createElement('strong'); ev.textContent = pr.event;
+        li.appendChild(ev);
+        var until = untilText(pr.ends || pr.expires);
+        if (until) { var u = document.createElement('span'); u.textContent = until.replace(/^ until /, 'until '); li.appendChild(u); }
+        if (pr.headline) li.title = pr.headline;
+        chips.appendChild(li);
+      });
+      main.append(title, chips);
+      var more = link($('wx-tile').href, 'Details');
+      more.className = 'alert-more';
+      more.setAttribute('aria-label', 'Alert details from the National Weather Service');
+      box.append(icon, main, more);
       box.hidden = false;
     }).catch(function () {});
 
