@@ -14,6 +14,7 @@ import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
 const CACHE_HOURS = Number(Deno.env.get("EVENTS_CACHE_HOURS") ?? "24");
 const MONTHLY_LIMIT = Number(Deno.env.get("EVENTS_MONTHLY_LIMIT") ?? "240");
 const MAX_RESULTS = 20;
+const RETRY_HOURS = 3;
 
 const ALLOWED_ORIGINS = new Set([
   "https://randhawa.vip",
@@ -118,18 +119,29 @@ async function placeEvents(db: SupabaseClient, city: string, state: string, apiK
   const url = "https://serpapi.com/search.json?" + new URLSearchParams({
     engine: "google_events", q: `Events in ${city}, ${stateName}`, hl: "en", gl: "us", api_key: apiKey,
   });
+  // After a failure, wait RETRY_HOURS before searching this city again (keeps the budget safe).
+  const holdOff = async () => {
+    const at = new Date(Date.now() - Math.max(0, CACHE_HOURS - RETRY_HOURS) * 3600e3).toISOString();
+    await db.from("local_events_cache").upsert({ area_key: key, city, state, events: stale, fetched_at: at });
+    return stale;
+  };
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    if (!res.ok) return stale;
+    // Google Events through SerpApi can take 15-30 seconds for some cities.
+    const res = await fetch(url, { signal: AbortSignal.timeout(45000) });
+    if (!res.ok) return await holdOff();
     const json = await res.json();
-    // A key or quota problem comes back as { error }: don't save it, so a fixed key works right away.
+    // A key or quota problem comes back as { error }: don't save it as "no events".
     // ("No results" is also an { error }, but that one is saved so the city isn't searched again all day.)
-    if (json?.error && !Array.isArray(json?.events_results) && !/hasn't returned any results/i.test(String(json.error))) return stale;
+    if (json?.error && !Array.isArray(json?.events_results) && !/hasn't returned any results/i.test(String(json.error))) {
+      console.log(`local-events: ${city}, ${state}: ${String(json.error).slice(0, 200)}`);
+      return await holdOff();
+    }
     const events = parseEvents(json, city).slice(0, 15);
     await db.from("local_events_cache").upsert({ area_key: key, city, state, events, fetched_at: new Date().toISOString() });
     return events;
-  } catch {
-    return stale;
+  } catch (err) {
+    console.log(`local-events: ${city}, ${state}: ${String(err).slice(0, 200)}`);
+    return await holdOff();
   }
 }
 
