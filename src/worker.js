@@ -6,6 +6,10 @@
 // Comma-separated exact addresses and/or ranges (IPv4 or IPv6), e.g.
 //   "98.97.27.131"   or   "98.97.0.0/16, 2001:db8::/32"
 // While ALLOWED_IPS is empty, everyone is blocked (the site stays private).
+// Set ALLOWED_IPS to * to open the site to everyone.
+//
+// Member pages: any <name>.randhawa.vip shows member.html, which loads that member's page.
+// Needs a proxied DNS record for * and a Worker route for *.randhawa.vip/* (see README).
 function privatePage(ip) {
   const safeIp = String(ip || 'unknown').replace(/[^0-9a-fA-F:.]/g, '');
   return '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
@@ -52,6 +56,7 @@ function parseRule(rule) {
 }
 
 export function isAllowed(visitorIp, allowedList) {
+  if (String(allowedList || '').trim() === '*') return true;
   const rules = String(allowedList || '')
     .split(',')
     .map((r) => r.trim())
@@ -76,6 +81,15 @@ export default {
     if (url.hostname === 'www.randhawa.vip') {
       url.hostname = 'randhawa.vip';
       return Response.redirect(url.toString(), 301);
+    }
+    // <name>.randhawa.vip: the member's page. Other paths (styles, scripts, images) are shared.
+    const sub = url.hostname.match(/^([a-z0-9-]+)\.randhawa\.vip$/i);
+    if (sub && (url.pathname === '/' || url.pathname === '/index.html')) {
+      const page = new URL('/member.html', url);
+      const res = await env.ASSETS.fetch(new Request(page, request));
+      const out = new Response(res.body, res);
+      out.headers.set('cache-control', 'no-cache');
+      return out;
     }
     const res = await env.ASSETS.fetch(request);
     // Pages always check for a newer version, so updates show on a normal refresh.

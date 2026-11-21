@@ -6,6 +6,8 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var state = { user: null, profile: null, places: [] };
+  // Shared with forum.js (the forum and personal pages).
+  window.RV = { db: db, state: state };
 
   // ---------- The street ----------
   var HOUSES = [
@@ -131,6 +133,7 @@
     if (!validZip(zip)) return message(msg, 'Enter your 5-digit ZIP code.', 'bad');
     if (!/^\S+@\S+\.\S+$/.test(email)) return message(msg, 'Enter a valid email address.', 'bad');
     if (pw.length < 8) return message(msg, 'Use a password with at least 8 characters.', 'bad');
+    if (f.rules && !f.rules.checked) return message(msg, 'Please agree to the house rules to join.', 'bad');
     btn.disabled = true; message(msg, '');
     lookupZip(zip).then(function (p) {
       if (!p) throw new Error('We don’t recognize ZIP code ' + zip + '. Check it and try again.');
@@ -642,6 +645,7 @@
 
   function loadEvents() {
     renderOpenHouses();
+    document.dispatchEvent(new CustomEvent('rv:area-changed'));
     $('events').innerHTML = ''; $('events-empty').hidden = true; $('events-loading').hidden = false;
     if (!state.profile || !state.profile.zip) {
       $('events-loading').hidden = true;
@@ -817,7 +821,7 @@
     show($('top-greeting'), !!state.user);
     show($('top-settings'), !!state.user);
     document.body.classList.toggle('signed-in', !!state.user);
-    if (!state.user) { state.profile = null; setStreetZip(''); return; }
+    if (!state.user) { state.profile = null; setStreetZip(''); document.dispatchEvent(new CustomEvent('rv:signed-out')); return; }
     loadProfile().then(renderPlace).then(function () { loadNews(); loadEvents(); loadNearbyOptions(); });
   }
 

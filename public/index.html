@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20261121i">
+  <link rel="stylesheet" href="assets/style.css?v=20261121j">
   <link rel="icon" href="assets/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
@@ -89,6 +89,7 @@
                 <input name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="pw-hint">
                 <span class="hint" id="pw-hint">At least 8 characters.</span>
               </label>
+              <label class="check-row"><input type="checkbox" name="rules" required> <span>I agree to the <a href="rules.html" target="_blank" rel="noopener">house rules</a></span></label>
               <button class="btn" type="submit">Join</button>
               <div class="message" id="signup-message" role="status" hidden></div>
             </form>
@@ -214,6 +215,85 @@
         </div>
       </div>
     </div>
+
+    <div class="forum-band" id="forum">
+      <div class="wrap">
+        <div class="forum-head">
+          <h2><span class="panel-icon forum-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span>Neighborhood forum</h2>
+          <p class="note">Posts from neighbors in your city and the cities you picked. Be kind; see the <a href="rules.html" target="_blank" rel="noopener">house rules</a>.</p>
+        </div>
+        <div class="forum-grid">
+          <aside class="forum-side">
+            <section class="card-lite" id="mypage" aria-labelledby="mypage-title">
+              <h3 id="mypage-title">Your page</h3>
+              <div id="mypage-claim" hidden>
+                <p class="note">Get your own web address, with your posts and a bit about you.</p>
+                <form id="claim-form" class="stack-form" novalidate>
+                  <label for="claim-slug">Pick your address</label>
+                  <div class="slug-row"><input id="claim-slug" name="slug" maxlength="30" autocomplete="off" spellcheck="false" placeholder="singh" aria-describedby="claim-hint"><span class="slug-suffix">.randhawa.vip</span></div>
+                  <span class="hint" id="claim-hint" aria-live="polite">3 to 30 letters, numbers or dashes.</span>
+                  <label for="claim-title">Name on your page</label>
+                  <input id="claim-title" name="title" maxlength="60" placeholder="The Singh Family">
+                  <button class="btn btn-small" type="submit">Create my page</button>
+                </form>
+              </div>
+              <div id="mypage-own" hidden>
+                <p class="mypage-link"><a id="mypage-url" href="#" target="_blank" rel="noopener"></a></p>
+                <form id="page-form" class="stack-form" novalidate>
+                  <label for="page-title">Name on your page</label>
+                  <input id="page-title" name="title" maxlength="60">
+                  <label for="page-about">About you (optional)</label>
+                  <textarea id="page-about" name="about" maxlength="1000" rows="3" placeholder="A few words for your neighbors"></textarea>
+                  <div class="form-row"><button class="btn btn-small btn-quiet" type="submit">Save page</button><span class="hint" id="page-hint" aria-live="polite"></span></div>
+                </form>
+              </div>
+            </section>
+
+            <section class="card-lite" id="compose" aria-labelledby="compose-title" hidden>
+              <h3 id="compose-title">New post</h3>
+              <form id="post-form" class="stack-form" novalidate>
+                <label for="post-category">Topic</label>
+                <select id="post-category" name="category">
+                  <option value="general">General</option>
+                  <option value="recommendations">Recommendations</option>
+                  <option value="for-sale">For sale &amp; free</option>
+                  <option value="lost-found">Lost &amp; found</option>
+                  <option value="safety">Safety</option>
+                  <option value="events">Events</option>
+                </select>
+                <label for="post-title">Title</label>
+                <input id="post-title" name="title" maxlength="120" required>
+                <label for="post-body">Message</label>
+                <textarea id="post-body" name="body" maxlength="4000" rows="5" required></textarea>
+                <p class="muted small">Don't share home addresses or phone numbers in public posts.</p>
+                <div class="form-row"><button class="btn btn-small" type="submit">Post</button><span class="hint" id="post-hint" aria-live="polite"></span></div>
+              </form>
+            </section>
+
+            <section class="card-lite admin-card" id="admin-card" aria-labelledby="admin-title" hidden>
+              <h3 id="admin-title">Reports <span class="count-pill" id="admin-count">0</span></h3>
+              <ul class="admin-list" id="admin-list"></ul>
+            </section>
+          </aside>
+
+          <section class="panel panel-forum" aria-labelledby="feed-title">
+            <header class="panel-head forum-feed-head">
+              <h2 id="feed-title" class="sr-only">Forum posts</h2>
+              <div class="seg" role="tablist" aria-label="Which posts">
+                <button type="button" role="tab" class="seg-btn is-on" id="feed-near" aria-selected="true">Near you</button>
+                <button type="button" role="tab" class="seg-btn" id="feed-all" aria-selected="false">Everywhere</button>
+              </div>
+            </header>
+            <div class="panel-body" tabindex="0" aria-label="Forum posts">
+              <p class="loading" id="feed-loading" role="status">Loading posts…</p>
+              <ul class="feed" id="feed"></ul>
+              <div class="empty" id="feed-empty" hidden></div>
+              <button class="btn btn-small btn-quiet feed-more" id="feed-more" type="button" hidden>Older posts</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
   </section>
 
   <p class="wrap loading" id="booting" role="status">Loading…</p>
@@ -226,6 +306,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="assets/app.js?v=20261121i"></script>
+<script src="assets/app.js?v=20261121j"></script>
+<script src="assets/forum.js?v=20261121j"></script>
 </body>
 </html>

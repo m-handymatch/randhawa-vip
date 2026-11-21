@@ -98,3 +98,16 @@ All loaded in the visitor's browser from free public sources (no keys), except h
 - **Air quality:** US AQI from [Open-Meteo](https://open-meteo.com/) (CC BY 4.0).
 - **County:** the city's county, county seat and county website from Wikidata.
 - **Home values:** Zillow Home Value Index (typical home value and 12-month change) per city, shown in the Open houses list. The GitHub Action `.github/workflows/home-values.yml` downloads Zillow Research's public ZHVI CSVs on the 20th of each month and writes small per-state files to `public/data/home-values/` (run it by hand from the Actions tab anytime). Zillow requires clear attribution, which the page shows.
+
+## Member pages (name.randhawa.vip) and the neighborhood forum
+
+- **Pages:** a signed-in member claims an address (3–30 letters, numbers or single dashes; words like www, admin, mail are reserved) in "Your page" on the main site. `<name>.randhawa.vip` is served by the Worker from `public/member.html` + `assets/member.js`, which load the member's page and posts with the public key. Pages and posts are readable by anyone; writing happens only on randhawa.vip.
+- **Forum:** posts from all member pages, shown on the main site in "Neighborhood forum" (near you = your city + your nearby cities, or everywhere), with replies, Report, Delete (own posts) and admin Hide. Code: `public/assets/forum.js`.
+- **Database (zip-zcta project):** `member_sites`, `posts`, `replies`, `reports`, `admins`, functions `forum_feed`, `open_reports`, `am_i_admin`, and guards in the `private` schema. Created by the migrations `member_pages_and_forum` and `forum_feed_and_autohide_fix` (Supabase dashboard → Database → Migrations).
+- **Safety:** row-level security everywhere; triggers set author, city and page name (people can't fake them); limits of 10 posts and 60 replies a day (30 s / 10 s apart); 3 reports from different people hide a post or reply until an admin reviews it; admins (table `admins`) see reports in the forum sidebar.
+- **Rules:** `public/rules.html`; agreeing is required at sign-up.
+
+### Turning it on (Cloudflare dashboard)
+1. DNS → Records → Add: type **AAAA**, name **\***, IPv6 **100::**, Proxied (orange cloud).
+2. Workers & Pages → randhawa-vip → Settings → Domains & Routes → Add → **Route**: `*.randhawa.vip/*`, zone randhawa.vip.
+3. When ready to open the site to everyone: Settings → Variables and Secrets → set **ALLOWED_IPS** to `*`. (Also delete any `ALLOWED_IPS` secret on the Supabase edge functions, if one was set.)
