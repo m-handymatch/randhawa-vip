@@ -60,12 +60,14 @@ p { margin: 0; }
 /* Wide desktop, signed in: greeting left, Change ZIP centred, Nearby cities right.
    The outer columns match (logo width on the left, a spacer on the right) so the middle is truly centred. */
 @media (min-width: 980px) {
-  .signed-in .top .wrap { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto minmax(0, 1fr) 88px; column-gap: 20px; align-items: center; }
+  .signed-in .top .wrap { display: grid; grid-template-columns: 88px minmax(0, 1.15fr) auto minmax(0, 1fr); column-gap: 28px; align-items: center; }
   .signed-in .brand { grid-column: 1; grid-row: 1; }
   .signed-in .top-greeting { grid-column: 2; grid-row: 1; }
   .signed-in .top-settings { display: contents; }
   .signed-in #zip-form { grid-column: 3; grid-row: 1; }
-  .signed-in #places-form { grid-column: 4 / 6; grid-row: 1; justify-self: end; }
+  .signed-in #places-form { grid-column: 4; grid-row: 1; justify-self: end; }
+  /* both controls: label on top, 44px box below, so the boxes line up */
+  .signed-in #zip-form, .signed-in #places-form { align-self: center; gap: 6px; }
 }
 /* Desktop: greeting right next to the logo (phones keep it on the right for now) */
 @media (min-width: 521px) {
@@ -73,7 +75,8 @@ p { margin: 0; }
   .top-settings { order: 2; margin-left: auto; }
 }
 .top-greeting h1 { font-size: clamp(22px, 2.2vw, 28px); }
-.top-greeting .place { margin-top: 2px; font-size: 18px; }
+.top-greeting .place { margin-top: 2px; font-size: 17px; }
+.place-zip { white-space: nowrap; color: var(--ink-soft); }
 .top-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .who { color: var(--ink-soft); font-size: 16px; }
 
@@ -144,7 +147,8 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 .zip-row { display: flex; gap: 10px; align-items: center; }
 .zip-form input { width: 130px; min-height: 44px; }
 #places-hint:empty, #zip-change-hint:empty { display: none; }
-#zip-form > label { width: 130px; text-align: center; }  /* centred over the ZIP box */
+#zip-form > label { width: 130px; text-align: center; line-height: 1.4; }
+.field-label { line-height: 1.4; }  /* centred over the ZIP box */
 .settings { display: flex; flex-wrap: wrap; gap: 18px 24px; align-items: flex-start; }
 .field-label { font-weight: 700; font-size: 15px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -153,6 +157,7 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
   list-style: none; cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 0 14px; border: 2px solid var(--line); border-radius: 12px; background: var(--white); font-size: 16px;
 }
+.picker summary .sum-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .picker summary::-webkit-details-marker { display: none; }
 .picker summary::after { content: ""; width: 9px; height: 9px; border-right: 2px solid var(--ink); border-bottom: 2px solid var(--ink); transform: rotate(45deg) translateY(-3px); flex: none; }
 .picker[open] summary { border-color: var(--ink); }

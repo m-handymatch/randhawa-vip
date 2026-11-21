@@ -180,7 +180,9 @@
       $('place').innerHTML = '';
       var strong = document.createElement('strong');
       strong.textContent = place ? titleCase(place.city) + ', ' + place.state : 'ZIP ' + p.zip;
-      $('place').append('Your neighborhood: ', strong, place ? ' (' + p.zip + ')' : '');
+      var zipSpan = document.createElement('span'); zipSpan.className = 'place-zip';
+      zipSpan.textContent = place ? '(' + p.zip + ')' : '';
+      $('place').append('Your neighborhood: ', strong, ' ', zipSpan);
       renderAbout(place);
     });
   }
@@ -495,9 +497,11 @@
     var boxes = Array.prototype.slice.call(document.querySelectorAll('#places-options input'));
     var chosen = boxes.filter(function (b) { return b.checked; });
     boxes.forEach(function (b) { if (!b.checked) b.disabled = chosen.length >= MAX_PLACES; });
-    $('places-summary').textContent = chosen.length
+    var text = chosen.length
       ? chosen.map(function (b) { return b.getAttribute('data-name'); }).join(', ')
       : 'Choose up to ' + MAX_PLACES;
+    $('places-summary-text').textContent = text;
+    $('places-summary').title = chosen.length ? text : '';
   }
 
   function renderPicker(options) {
