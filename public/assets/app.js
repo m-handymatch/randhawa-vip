@@ -765,7 +765,7 @@
     } catch (e) { /* storage full or blocked */ }
   }
   function showEventsUpdated(iso) {
-    var t = Date.parse(iso || ''), msg = 'Events refresh once a day, so very new events can take up to 24 hours to appear.';
+    var t = Date.parse(iso || ''), msg = 'Events refreshed once a day.';
     if (t) {
       var d = new Date(t), today = new Date();
       var when = d.toDateString() === today.toDateString() ? 'today' :
