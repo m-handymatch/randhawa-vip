@@ -715,16 +715,16 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 .panel-events .split-body { display: flex; flex-direction: column; gap: 12px; overflow: hidden; padding: 12px 14px 14px; }
 .panel-events .markets { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; margin: 0; padding-bottom: 10px; }
 .panel-events .markets[hidden] { display: none; }
-.panel-events .markets .markets-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-right: -8px; padding-right: 8px; }
+.panel-events .markets .markets-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-right: -10px; padding-right: 10px; }
 .panel-events .evbox { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; margin: 0; padding-bottom: 12px; }
-.panel-events .evbox-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 6px -8px 0 0; padding-right: 8px; }
+.panel-events .evbox-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 6px -10px 0 0; padding-right: 10px; }
 .panel-events .evbox .events { margin-top: 0; }
 .panel-events .evbox .events .event:first-child { border-top: 0; padding-top: 4px; }
-.box-scroll { overscroll-behavior: contain; scrollbar-width: thin; }
+.box-scroll { overscroll-behavior: contain; scrollbar-width: auto; }
 .box-scroll:focus-visible { outline: 3px solid var(--marigold); outline-offset: 2px; border-radius: 6px; }
-.box-scroll::-webkit-scrollbar { width: 12px; }
+.box-scroll::-webkit-scrollbar { width: 16px; }
 .box-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,.7); border-radius: 10px; }
-.box-scroll::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 10px; border: 2px solid rgba(255,255,255,.9); min-height: 40px; }
+.box-scroll::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 10px; border: 2px solid rgba(255,255,255,.9); min-height: 56px; }
 .markets .box-scroll::-webkit-scrollbar-thumb { background: var(--forest); }
 @supports not selector(::-webkit-scrollbar) { .box-scroll { scrollbar-color: var(--ink) rgba(255,255,255,.7); } .markets .box-scroll { scrollbar-color: var(--forest) rgba(255,255,255,.7); } }
 .evbox .evbox-note { display: flex; align-items: flex-start; gap: 6px; margin: 8px 0 2px; padding: 6px 10px; border-radius: 8px; background: #FFF6DA; border: 1px solid #F0D98A; font-size: 13px; font-weight: 600; line-height: 1.35; color: #6B4E00; }

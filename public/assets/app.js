@@ -714,6 +714,26 @@
     more.setAttribute('aria-expanded', 'false');
     box.hidden = false;
   }
+  // Scrolling runs on from one box into the next: past the end of the farmers
+  // markets list the wheel moves the local events list, and back up again.
+  (function chainScroll() {
+    var top = $('markets-list'), bottom = document.querySelector('.evbox-scroll');
+    if (!top || !bottom) return;
+    function px(e, el) { return e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * el.clientHeight : e.deltaY; }
+    top.addEventListener('wheel', function (e) {
+      var dy = px(e, top);
+      if (dy > 0 && top.scrollTop + top.clientHeight >= top.scrollHeight - 1) {
+        e.preventDefault(); bottom.scrollTop += dy;
+      }
+    }, { passive: false });
+    bottom.addEventListener('wheel', function (e) {
+      var dy = px(e, bottom);
+      if (dy < 0 && bottom.scrollTop <= 0 && !$('markets').hidden) {
+        e.preventDefault(); top.scrollTop += dy;
+      }
+    }, { passive: false });
+  })();
+
   $('markets-more').addEventListener('click', function () {
     var open = this.getAttribute('aria-expanded') !== 'true';
     var rows = $('markets-list').children, n = 0;
