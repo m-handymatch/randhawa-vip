@@ -360,30 +360,52 @@
     box.hidden = false;
   }
 
+  // Last headlines for this ZIP + nearby cities: shown at once, then replaced
+  // with fresh ones when they arrive (browser storage can be missing: ignore errors).
+  function newsCacheKey() {
+    var p = state.profile || {};
+    return 'rv-news:' + p.zip + '|' + (p.nearby_places || []).join(';');
+  }
+  function showNews(places, articles) {
+    state.places = places;
+    $('news-note').textContent = places.length > 1 ? 'From ' + listJoin(places) + '.' : 'Headlines from local and regional news.';
+    $('news-note').title = $('news-note').textContent;
+    $('news-loading').hidden = true; $('news-empty').hidden = true;
+    renderStories(articles);
+  }
+  var newsToken = 0;
   function loadNews() {
+    var token = ++newsToken;
     $('stories').innerHTML = ''; $('news-empty').hidden = true; $('news-loading').hidden = false;
     if (!state.profile || !state.profile.zip) {
       $('news-loading').hidden = true;
-      emptyState(['Add your ZIP code above and we’ll show news from your neighborhood.']);
+      emptyState(['Add your ZIP code above and we\u2019ll show news from your neighborhood.']);
       return;
     }
+    var cached = null;
+    try { cached = JSON.parse(localStorage.getItem(newsCacheKey()) || 'null'); } catch (e) { cached = null; }
+    var shownCached = !!(cached && cached.articles && cached.articles.length);
+    if (shownCached) showNews(cached.places || [], cached.articles);
     db.functions.invoke('local-news', { method: 'GET' }).then(function (r) {
+      if (token !== newsToken) return;
       $('news-loading').hidden = true;
       if (r.error) {
-        emptyState(['We couldn’t load local news right now.', 'Try again in a few minutes.']);
+        if (!shownCached) emptyState(['We couldn\u2019t load local news right now.', 'Try again in a few minutes.']);
         return;
       }
       var articles = (r.data && r.data.articles) || [];
-      state.places = (r.data && r.data.places) || [];
-      $('news-note').textContent = state.places.length > 1
-        ? 'From ' + listJoin(state.places) + '.'
-        : 'Headlines from local and regional news.';
-      $('news-note').title = $('news-note').textContent;
+      var places = (r.data && r.data.places) || [];
       if (!articles.length) {
+        if (shownCached) return;
+        showNews(places, []);
         emptyState(['No local headlines yet for your area.', 'Smaller towns get fewer stories. Check back later today.']);
         return;
       }
-      renderStories(articles);
+      showNews(places, articles);
+      try {
+        Object.keys(localStorage).forEach(function (k) { if (k.indexOf('rv-news:') === 0) localStorage.removeItem(k); });
+        localStorage.setItem(newsCacheKey(), JSON.stringify({ at: Date.now(), places: places, articles: articles }));
+      } catch (e) { /* storage full or blocked */ }
     });
   }
 

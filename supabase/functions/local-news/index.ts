@@ -96,7 +96,7 @@ async function newsDataNews(apiKey: string, city: string, state: string): Promis
 
   const found: Article[] = [];
   for (const params of attempts) {
-    const res = await fetch(`${base}?${new URLSearchParams(params)}`).catch(() => null);
+    const res = await fetch(`${base}?${new URLSearchParams(params)}`, { signal: AbortSignal.timeout(8000) }).catch(() => null);
     if (!res?.ok) continue;
     const body = await res.json().catch(() => null);
     if (body?.status !== "success" || !Array.isArray(body.results)) continue;
@@ -126,7 +126,7 @@ async function googleNews(place: string, state: string): Promise<Article[]> {
   // Both the place and the state name must appear, so "Oakland" doesn't match Oakland, Michigan.
   const q = `"${place}" "${stateName}" when:3d`;
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
-  const res = await fetch(url, { headers: { "User-Agent": "randhawa.vip local news" } }).catch(() => null);
+  const res = await fetch(url, { headers: { "User-Agent": "localconnect.site local news" }, signal: AbortSignal.timeout(8000) }).catch(() => null);
   if (!res?.ok) return [];
   const xml = await res.text();
   const items = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
@@ -145,6 +145,9 @@ async function googleNews(place: string, state: string): Promise<Article[]> {
 }
 
 // One place's articles, cached per place for CACHE_HOURS.
+// Places with saved articles answer at once and refresh in the background
+// (stale-while-revalidate). Places with no news are saved too, so a quiet town
+// isn't searched again on every visit.
 async function placeNews(
   db: any, place: string, state: string, withNewsData: boolean, apiKey: string | undefined,
 ): Promise<Article[]> {
@@ -153,14 +156,27 @@ async function placeNews(
   if (cached && Date.now() - new Date(cached.fetched_at).getTime() < CACHE_HOURS * 3600 * 1000) {
     return cached.articles as Article[];
   }
+  const stale = (cached?.articles as Article[] | undefined) ?? [];
+  const job = refreshPlaceNews(db, areaKey, place, state, withNewsData, apiKey, stale).catch(() => stale);
+  if (cached) {
+    // deno-lint-ignore no-explicit-any
+    const rt = (globalThis as any).EdgeRuntime;
+    if (rt?.waitUntil) { rt.waitUntil(job); return stale; }
+  }
+  return await job;
+}
 
+async function refreshPlaceNews(
+  db: any, areaKey: string, place: string, state: string, withNewsData: boolean, apiKey: string | undefined, stale: Article[],
+): Promise<Article[]> {
+  // Claim the refresh so parallel visits don't search the same place at once.
+  await db.from("local_news_cache").upsert({ area_key: areaKey, city: place, state, articles: stale, fetched_at: new Date().toISOString() });
   const [nd, gn] = await Promise.all([
     withNewsData && apiKey ? newsDataNews(apiKey, place, state).catch(() => []) : Promise.resolve([]),
     googleNews(place, state).catch(() => []),
   ]);
-  const articles = [...nd, ...gn].map((a) => ({ ...a, place }));
-  if (!articles.length) return (cached?.articles as Article[]) ?? [];
-
+  const found = [...nd, ...gn].map((a) => ({ ...a, place }));
+  const articles = found.length ? found : stale;
   await db.from("local_news_cache").upsert({
     area_key: areaKey, city: place, state, articles, fetched_at: new Date().toISOString(),
   });
