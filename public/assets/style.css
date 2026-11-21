@@ -117,7 +117,7 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 /* Signed-in view */
 .home-head { padding: 4px 0 22px; }
 .home-head .wrap { display: flex; }
-.home-head .settings { flex: 1; justify-content: flex-end; }
+.home-head .settings { flex: 1; }
 .home-head h1 { font-size: clamp(22px, 2.2vw, 28px); }
 .place { margin-top: 8px; font-size: 20px; color: var(--ink-soft); }
 .place strong { color: var(--ink); }
