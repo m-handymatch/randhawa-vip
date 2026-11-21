@@ -76,7 +76,7 @@
   var zipCache = {};
   function lookupZip(zip) {
     if (zipCache[zip]) return Promise.resolve(zipCache[zip]);
-    return db.from('zip_zcta').select('zip, city, state').eq('zip', zip).maybeSingle()
+    return db.from('zip_zcta').select('zip, city, state, zcta').eq('zip', zip).maybeSingle()
       .then(function (r) { if (r.data) zipCache[zip] = r.data; return r.data; });
   }
 
@@ -182,7 +182,139 @@
       strong.textContent = place ? titleCase(place.city) + ', ' + place.state : 'ZIP ' + p.zip;
       $('place').append('Your neighborhood: ', strong, place ? ' (' + p.zip + ')' : '');
       $('news-title').textContent = place ? 'Around ' + titleCase(place.city) : 'Around the neighborhood';
+      renderAbout(place);
     });
+  }
+
+  // ---------- About your city (Wikipedia, Wikimedia Commons, Wikidata, OpenStreetMap) ----------
+  var STATE_NAMES = {AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'District of Columbia',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',PR:'Puerto Rico',GU:'Guam',VI:'U.S. Virgin Islands',AS:'American Samoa',MP:'Northern Mariana Islands'};
+  var aboutToken = 0;
+
+  function getJSON(url) {
+    return fetch(url, { credentials: 'omit' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+  }
+  function qs(params) {
+    return Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+  }
+  function plainText(html) {
+    var d = new DOMParser().parseFromString('<body>' + (html || '') + '</body>', 'text/html');
+    return (d.body.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+  function safeUrl(u) { return /^https?:\/\//i.test(u || '') ? u : null; }
+  function link(href, text) {
+    var a = document.createElement('a'); a.href = href; a.textContent = text; a.target = '_blank'; a.rel = 'noopener'; return a;
+  }
+
+  function wikiCity(city, st) {
+    var stateName = STATE_NAMES[st];
+    var titles = stateName ? [city + ', ' + stateName, city] : [city];
+    function tryTitle(i) {
+      if (i >= titles.length) return Promise.resolve(null);
+      return getJSON('https://en.wikipedia.org/w/api.php?' + qs({
+        action: 'query', format: 'json', formatversion: 2, origin: '*', redirects: 1, titles: titles[i],
+        prop: 'extracts|pageimages|pageprops|info', exintro: 1, explaintext: 1, exsentences: 3,
+        piprop: 'name', pilicense: 'free', ppprop: 'wikibase_item|disambiguation', inprop: 'url'
+      })).then(function (r) {
+        var pg = r && r.query && r.query.pages && r.query.pages[0];
+        var ok = pg && !pg.missing && !(pg.pageprops && 'disambiguation' in pg.pageprops) && pg.extract
+          // a bare city name must still be about a place in this state
+          && (i === 0 || !stateName || pg.extract.indexOf(stateName) !== -1);
+        return ok ? pg : tryTitle(i + 1);
+      });
+    }
+    return tryTitle(0);
+  }
+
+  // Only freely licensed Commons files, with the photographer and license we must show.
+  function commonsPhoto(fileName) {
+    if (!fileName) return Promise.resolve(null);
+    return getJSON('https://commons.wikimedia.org/w/api.php?' + qs({
+      action: 'query', format: 'json', formatversion: 2, origin: '*', titles: 'File:' + fileName,
+      prop: 'imageinfo', iiprop: 'url|extmetadata', iiurlwidth: 640
+    })).then(function (r) {
+      var pg = r && r.query && r.query.pages && r.query.pages[0];
+      var info = pg && pg.imageinfo && pg.imageinfo[0];
+      if (!info) return null;
+      var m = info.extmetadata || {};
+      var license = plainText(m.LicenseShortName && m.LicenseShortName.value);
+      var free = /^(cc[ -]?by|cc0|public domain|pd\b|gfdl)/i.test(license) && !/\bnc\b|\bnd\b|non-?free|fair use/i.test(license);
+      if (!free || !safeUrl(info.thumburl)) return null;
+      return {
+        src: info.thumburl, page: safeUrl(info.descriptionurl), license: license,
+        licenseUrl: safeUrl(m.LicenseUrl && m.LicenseUrl.value),
+        artist: plainText(m.Artist && m.Artist.value).slice(0, 80),
+        alt: plainText(m.ImageDescription && m.ImageDescription.value).slice(0, 160)
+      };
+    }).catch(function () { return null; });
+  }
+
+  function officialSite(qid) {
+    if (!qid) return Promise.resolve(null);
+    return getJSON('https://www.wikidata.org/w/api.php?' + qs({ action: 'wbgetclaims', format: 'json', origin: '*', entity: qid, property: 'P856' }))
+      .then(function (r) {
+        var c = r && r.claims && r.claims.P856 && r.claims.P856[0];
+        return safeUrl(c && c.mainsnak && c.mainsnak.datavalue && c.mainsnak.datavalue.value);
+      }).catch(function () { return null; });
+  }
+
+  function centroid(zcta) {
+    if (!zcta) return Promise.resolve(null);
+    return db.from('zcta_centroids').select('lat, lon').eq('zcta', zcta).maybeSingle()
+      .then(function (r) { return r.data; }).catch(function () { return null; });
+  }
+
+  function renderAbout(place) {
+    var token = ++aboutToken;
+    var card = document.querySelector('.about-card');
+    if (!place) { $('about').hidden = true; return; }
+    var city = titleCase(place.city);
+    $('about-title').textContent = 'About ' + city;
+
+    centroid(place.zcta).then(function (c) {
+      if (token !== aboutToken) return;
+      if (!c) { $('about-map').hidden = true; card.classList.add('no-map'); return; }
+      var d = 0.035, lat = Number(c.lat), lon = Number(c.lon);
+      var bbox = [lon - d * 1.4, lat - d, lon + d * 1.4, lat + d].map(function (n) { return n.toFixed(5); }).join(',');
+      $('about-map-frame').src = 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + lat.toFixed(5) + ',' + lon.toFixed(5);
+      $('about-map-link').href = 'https://www.openstreetmap.org/?mlat=' + lat.toFixed(5) + '&mlon=' + lon.toFixed(5) + '#map=13/' + lat.toFixed(5) + '/' + lon.toFixed(5);
+      $('about-map').hidden = false; card.classList.remove('no-map');
+      $('about').hidden = false;
+    });
+
+    wikiCity(city, place.state).then(function (pg) {
+      if (token !== aboutToken) return;
+      if (!pg) {
+        $('about-extract').textContent = '';
+        $('about-links').innerHTML = '';
+        $('about-text-credit').hidden = true;
+        $('about-photo').hidden = true; card.classList.add('no-photo');
+        return;
+      }
+      $('about').hidden = false;
+      $('about-extract').textContent = pg.extract.replace(/\s*\([^()]*\)/, '').replace(/\s+/g, ' ').trim();
+      var wikiUrl = safeUrl(pg.fullurl) || 'https://en.wikipedia.org/wiki/' + encodeURIComponent(pg.title.replace(/ /g, '_'));
+      $('about-wiki-credit').href = wikiUrl;
+      $('about-text-credit').hidden = false;
+      var links = $('about-links'); links.innerHTML = '';
+      links.appendChild(link(wikiUrl, 'Read more on Wikipedia'));
+      return Promise.all([commonsPhoto(pg.pageimage), officialSite(pg.pageprops && pg.pageprops.wikibase_item)]).then(function (res) {
+        if (token !== aboutToken) return;
+        var photo = res[0], site = res[1];
+        if (site) {
+          var host = site.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/.*$/, '');
+          links.appendChild(link(site, 'City website (' + host + ')'));
+        }
+        if (!photo) { $('about-photo').hidden = true; card.classList.add('no-photo'); return; }
+        var img = $('about-img');
+        img.src = photo.src; img.alt = photo.alt || 'Photo of ' + city;
+        var cap = $('about-credit'); cap.innerHTML = '';
+        cap.append('Photo: ');
+        cap.appendChild(photo.page ? link(photo.page, photo.artist || 'Wikimedia Commons') : document.createTextNode(photo.artist || 'Wikimedia Commons'));
+        cap.append(', ');
+        cap.appendChild(photo.licenseUrl ? link(photo.licenseUrl, photo.license) : document.createTextNode(photo.license));
+        $('about-photo').hidden = false; card.classList.remove('no-photo');
+      });
+    }).catch(function () { /* the card just shows what loaded */ });
   }
 
   function renderStories(articles) {

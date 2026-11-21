@@ -69,3 +69,14 @@ To use the randhawa.vip domain later: add it under Settings → Pages → Custom
 - `supabase/functions/local-news/index.ts`: the Edge Function (already deployed)
 
 ZIP data: UDS Mapper ZIP Code to ZCTA Crosswalk 2022 (HRSA), 2020 Census ZCTAs.
+
+## About your city card
+
+The dashboard shows a card for the signed-in person's city, loaded in their browser:
+
+- **Summary**: the first three sentences of the city's English Wikipedia article ("City, State" title first). Shown with credit and a link to CC BY-SA 4.0.
+- **Photo**: the article's lead image, only if Wikimedia Commons lists a free license (CC BY, CC BY-SA, CC0, public domain or GFDL; no NC/ND). The photographer and license are shown under it.
+- **City website**: the "official website" (P856) from Wikidata.
+- **Map**: an OpenStreetMap embed centred on the ZIP's ZCTA centroid, credited to OpenStreetMap contributors. OSM's free tiles are for light use; switch to a paid tile provider if the site goes public with real traffic.
+
+Photos from city websites aren't used: state and local government works can be copyrighted.
