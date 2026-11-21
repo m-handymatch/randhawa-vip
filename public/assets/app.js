@@ -598,7 +598,7 @@
   }
 
   // ---------- Farmers markets: USDA directory, in 1-degree tiles ----------
-  var MARKET_MILES = 6, MARKETS_SHOWN = 3, marketsToken = 0, marketTiles = {};
+  var MARKET_MILES = 6, MARKETS_SHOWN = 1e9, marketsToken = 0, marketTiles = {};
   function marketTile(key) {
     if (!marketTiles[key]) {
       marketTiles[key] = fetch('data/farmers-markets/' + key + '.json')
