@@ -1,8 +1,9 @@
-"""Builds public/data/farmers-markets/{ST}.json from the USDA National Farmers
+"""Builds public/data/farmers-markets/{lat}_{lon}.json (1-degree tiles, floor of
+lat/lon) from the USDA National Farmers
 Market Directory (USDA AMS Local Food Portal, public "download by directory"
 export). Each file is a list of markets with name, address, lat/lon, season and
 schedule text, and a website when listed. Runs from a GitHub Action."""
-import csv, io, json, os, re, sys, time, urllib.request, zipfile
+import csv, io, math, json, os, re, sys, time, urllib.request, zipfile
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "data", "farmers-markets")
 URLS = [
@@ -97,13 +98,13 @@ def main():
             continue
         addr = clean(pick(r, "location_address"), 200)
         m_ = ADDR.search(addr)
-        if not m_:
-            continue
-        city, state, zc = m_.group(1).strip(), m_.group(2).strip().lower(), m_.group(3)
-        st = STATES.get(state) or (state.upper() if len(state) == 2 else "")
-        if not st:
-            continue
-        street = addr[:m_.start()].strip(" ,")
+        if m_:
+            city, zc, street = m_.group(1).strip(), m_.group(3), addr[:m_.start()].strip(" ,")
+        else:
+            z = re.search(r"(\d{5})(?:-\d{4})?\s*$", addr)
+            parts = [p.strip() for p in addr.split(",") if p.strip()]
+            city = parts[-2] if len(parts) >= 3 else ""
+            zc, street = (z.group(1) if z else ""), addr
         pay = pick(r, "fnap") + pick(r, "acceptedpayment")
         m = {
             "id": pick(r, "listing_id"),
@@ -120,17 +121,21 @@ def main():
         }
         if not m["name"]:
             continue
-        by_state.setdefault(st, []).append(m)
+        tile = f"{math.floor(lat)}_{math.floor(lon)}"
+        by_state.setdefault(tile, []).append(m)
     if sum(len(v) for v in by_state.values()) < 500:
         print("Too few markets parsed; not writing.")
         sys.exit(1)
     os.makedirs(OUT, exist_ok=True)
+    for old in os.listdir(OUT):
+        if old.endswith(".json"):
+            os.remove(os.path.join(OUT, old))
     for st, ms in by_state.items():
         ms.sort(key=lambda m: (m["city"], m["name"]))
         with open(os.path.join(OUT, f"{st}.json"), "w") as f:
             json.dump({"source": "USDA National Farmers Market Directory", "markets": ms}, f,
                       separators=(",", ":"))
-    print({k: len(v) for k, v in sorted(by_state.items())})
+    print("tiles", len(by_state), "markets", sum(len(v) for v in by_state.values()))
 
 
 if __name__ == "__main__":
