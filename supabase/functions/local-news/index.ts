@@ -14,6 +14,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 const CACHE_HOURS = Number(Deno.env.get("NEWS_CACHE_HOURS") ?? "3");
 
 const ALLOWED_ORIGINS = new Set([
+  "https://localconnect.site",
+  "https://www.localconnect.site",
   "https://randhawa.vip",
   "https://www.randhawa.vip",
   "https://m-handymatch.github.io",   // GitHub Pages, until randhawa.vip points at the site
@@ -35,7 +37,7 @@ const STATE_NAMES: Record<string, string> = {
 function cors(origin: string | null): Record<string, string> {
   const ok = origin && (ALLOWED_ORIGINS.has(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin));
   return {
-    "Access-Control-Allow-Origin": ok ? origin! : "https://randhawa.vip",
+    "Access-Control-Allow-Origin": ok ? origin! : "https://localconnect.site",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
     "Vary": "Origin",

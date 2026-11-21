@@ -17,6 +17,8 @@ const MAX_RESULTS = 20;
 const RETRY_HOURS = 3;
 
 const ALLOWED_ORIGINS = new Set([
+  "https://localconnect.site",
+  "https://www.localconnect.site",
   "https://randhawa.vip",
   "https://www.randhawa.vip",
   "https://m-handymatch.github.io",
@@ -38,7 +40,7 @@ const STATE_NAMES: Record<string, string> = {
 function cors(origin: string | null): Record<string, string> {
   const ok = origin && (ALLOWED_ORIGINS.has(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin));
   return {
-    "Access-Control-Allow-Origin": ok ? origin! : "https://randhawa.vip",
+    "Access-Control-Allow-Origin": ok ? origin! : "https://localconnect.site",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
     "Vary": "Origin",

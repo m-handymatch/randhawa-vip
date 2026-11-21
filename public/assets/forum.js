@@ -1,4 +1,4 @@
-// randhawa.vip: personal pages (name.randhawa.vip) and the neighborhood forum.
+// localconnect.site: personal pages (name.localconnect.site) and the neighborhood forum.
 // Uses the Supabase client and signed-in state that app.js shares as window.RV.
 (function () {
   var RV = window.RV;
@@ -6,7 +6,7 @@
   var db = RV.db, state = RV.state;
   var $ = function (id) { return document.getElementById(id); };
 
-  var BASE_DOMAIN = 'randhawa.vip';
+  var BASE_DOMAIN = 'localconnect.site';
   var CATEGORIES = {
     'general': 'General', 'recommendations': 'Recommendations', 'for-sale': 'For sale & free',
     'lost-found': 'Lost & found', 'safety': 'Safety', 'events': 'Events'

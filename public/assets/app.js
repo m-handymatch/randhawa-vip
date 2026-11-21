@@ -1,4 +1,4 @@
-// randhawa.vip front end
+// localconnect.site front end
 (function () {
   var SUPABASE_URL = 'https://pipzvzxcfvsxyiwmqpyv.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_lt-qIsIQf8oXzk-P6b4mAQ_2BwK15ZN'; // public, read-only key

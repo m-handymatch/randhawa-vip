@@ -1,4 +1,4 @@
-# randhawa.vip
+# localconnect.site
 
 Connecting neighbors. The first feature: local news for signed-in users, matched to the ZIP code on their profile.
 
@@ -14,7 +14,7 @@ Runs on the Supabase project **zip-zcta** (`pipzvzxcfvsxyiwmqpyv`, region us-wes
 ## Setup
 
 - Add the secret `NEWSDATA_API_KEY` in Supabase: **Edge Functions → Secrets**. Optional: `NEWS_CACHE_HOURS`.
-- The function only answers browsers on `https://randhawa.vip`, `https://www.randhawa.vip` and `http://localhost`. Change `ALLOWED_ORIGINS` in the function if the site lives elsewhere, then redeploy.
+- The function only answers browsers on `https://localconnect.site`, `https://www.localconnect.site` and `http://localhost`. Change `ALLOWED_ORIGINS` in the function if the site lives elsewhere, then redeploy.
 
 ## Calling it from the site
 
@@ -50,16 +50,16 @@ The site lives in `public/`; `src/worker.js` runs first on every request and let
 1. Cloudflare → **Workers & Pages → Create application → Import a repository** → `m-handymatch/randhawa-vip`.
 2. Build command: leave empty. Deploy command: `npx wrangler deploy`. Deploy.
 3. **Settings → Variables and Secrets** → add `ALLOWED_IPS` (type Text) → Deploy.
-4. **Settings → Domains & Routes → Add → Custom domain** → `randhawa.vip`.
-5. Supabase (zip-zcta) → **Authentication → URL Configuration**: Site URL `https://randhawa.vip`, Redirect URL `https://randhawa.vip/**`.
+4. **Settings → Domains & Routes → Add → Custom domain** → `localconnect.site`.
+5. Supabase (zip-zcta) → **Authentication → URL Configuration**: Site URL `https://localconnect.site`, Redirect URL `https://localconnect.site/**`.
 
 ### Private: only your IP (Cloudflare)
 
-- Website: `src/worker.js` lets in only the IPs in the Worker variable `ALLOWED_IPS`. Covers randhawa.vip and the *.workers.dev address.
+- Website: `src/worker.js` lets in only the IPs in the Worker variable `ALLOWED_IPS`. Covers localconnect.site and the *.workers.dev address.
 - Optional extra layer: Cloudflare **Security → Security rules → Create rule → Custom rules**, block when `not ip.src in {YOUR.IP}`.
 - News function: Supabase secret `ALLOWED_IPS` (same format, addresses or ranges). Unset = open to everyone.
 
-To use the randhawa.vip domain later: add it under Settings → Pages → Custom domain, point the DNS records GitHub shows, then update the Site URL in Supabase.
+To use the localconnect.site domain later: add it under Settings → Pages → Custom domain, point the DNS records GitHub shows, then update the Site URL in Supabase.
 
 ## Files
 
@@ -99,9 +99,9 @@ All loaded in the visitor's browser from free public sources (no keys), except h
 - **County:** the city's county, county seat and county website from Wikidata.
 - **Home values:** Zillow Home Value Index (typical home value and 12-month change) per city, shown in the Open houses list. The GitHub Action `.github/workflows/home-values.yml` downloads Zillow Research's public ZHVI CSVs on the 20th of each month and writes small per-state files to `public/data/home-values/` (run it by hand from the Actions tab anytime). Zillow requires clear attribution, which the page shows.
 
-## Member pages (name.randhawa.vip) and the neighborhood forum
+## Member pages (name.localconnect.site) and the neighborhood forum
 
-- **Pages:** a signed-in member claims an address (3–30 letters, numbers or single dashes; words like www, admin, mail are reserved) in "Your page" on the main site. `<name>.randhawa.vip` is served by the Worker from `public/member.html` + `assets/member.js`, which load the member's page and posts with the public key. Pages and posts are readable by anyone; writing happens only on randhawa.vip.
+- **Pages:** a signed-in member claims an address (3–30 letters, numbers or single dashes; words like www, admin, mail are reserved) in "Your page" on the main site. `<name>.localconnect.site` is served by the Worker from `public/member.html` + `assets/member.js`, which load the member's page and posts with the public key. Pages and posts are readable by anyone; writing happens only on localconnect.site.
 - **Forum:** posts from all member pages, shown on the main site in "Neighborhood forum" (near you = your city + your nearby cities, or everywhere), with replies, Report, Delete (own posts) and admin Hide. Code: `public/assets/forum.js`.
 - **Database (zip-zcta project):** `member_sites`, `posts`, `replies`, `reports`, `admins`, functions `forum_feed`, `open_reports`, `am_i_admin`, and guards in the `private` schema. Created by the migrations `member_pages_and_forum` and `forum_feed_and_autohide_fix` (Supabase dashboard → Database → Migrations).
 - **Safety:** row-level security everywhere; triggers set author, city and page name (people can't fake them); limits of 10 posts and 60 replies a day (30 s / 10 s apart); 3 reports from different people hide a post or reply until an admin reviews it; admins (table `admins`) see reports in the forum sidebar.
@@ -109,5 +109,14 @@ All loaded in the visitor's browser from free public sources (no keys), except h
 
 ### Turning it on (Cloudflare dashboard)
 1. DNS → Records → Add: type **AAAA**, name **\***, IPv6 **100::**, Proxied (orange cloud).
-2. Workers & Pages → randhawa-vip → Settings → Domains & Routes → Add → **Route**: `*.randhawa.vip/*`, zone randhawa.vip.
+2. Workers & Pages → randhawa-vip → Settings → Domains & Routes → Add → **Route**: `*.localconnect.site/*`, zone localconnect.site.
 3. When ready to open the site to everyone: Settings → Variables and Secrets → set **ALLOWED_IPS** to `*`. (Also delete any `ALLOWED_IPS` secret on the Supabase edge functions, if one was set.)
+
+
+## Moving to localconnect.site (Nov 2026)
+
+- The site is now **open to everyone** (no IP lock). To lock it again, set `LOCK_TO_IPS` on the Worker; the old `ALLOWED_IPS` variable is ignored.
+- `localconnect.site` is the main address; member pages are `<name>.localconnect.site`. `randhawa.vip` (and `<name>.randhawa.vip`) still work and will redirect once `REDIRECT_OLD` in `src/worker.js` is switched on.
+- Cloudflare for localconnect.site: Worker custom domain `localconnect.site` (+ `www.localconnect.site`), DNS `AAAA *` → `100::` proxied, Worker route `*.localconnect.site/*`.
+- Supabase: Authentication → URL Configuration: Site URL `https://localconnect.site`, redirect URLs `https://localconnect.site/**`. Custom SMTP is required for public sign-ups (the built-in sender only emails the project's team).
+- Pages: `rules.html` (house rules), `privacy.html` (privacy).

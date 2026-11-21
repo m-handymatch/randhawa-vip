@@ -1,4 +1,4 @@
-// A member's page: <slug>.randhawa.vip (read-only; posting happens on randhawa.vip).
+// A member's page: <slug>.localconnect.site (read-only; posting happens on localconnect.site).
 (function () {
   var db = window.supabase.createClient('https://pipzvzxcfvsxyiwmqpyv.supabase.co', 'sb_publishable_lt-qIsIQf8oXzk-P6b4mAQ_2BwK15ZN');
   var $ = function (id) { return document.getElementById(id); };
@@ -16,16 +16,16 @@
   }
   function getJSON(u) { return fetch(u, { credentials: 'omit' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); }
 
-  // Slug from the address (singh.randhawa.vip -> singh). ?u=singh works for previews.
+  // Slug from the address (singh.localconnect.site -> singh). ?u=singh works for previews.
   var host = location.hostname.toLowerCase();
-  var m = host.match(/^([a-z0-9-]+)\.randhawa\.vip$/);
+  var m = host.match(/^([a-z0-9-]+)\.localconnect\.site$/);
   var slug = (m && m[1] !== 'www') ? m[1] : (new URLSearchParams(location.search).get('u') || '').toLowerCase();
 
   function missing() {
-    $('mp-title').textContent = slug ? slug + '.randhawa.vip' : 'randhawa.vip';
+    $('mp-title').textContent = slug ? slug + '.localconnect.site' : 'localconnect.site';
     $('mp-address').textContent = '';
     $('mp-missing').hidden = false;
-    document.title = 'Not found · randhawa.vip';
+    document.title = 'Not found · localconnect.site';
   }
 
   if (!/^[a-z0-9-]{3,30}$/.test(slug)) { missing(); return; }
@@ -33,11 +33,11 @@
   db.from('member_sites').select('slug, title, about, city, state, zip, created_at').eq('slug', slug).maybeSingle().then(function (r) {
     var site = r.data;
     if (!site) { missing(); return; }
-    document.title = site.title + ' · randhawa.vip';
-    $('mp-address').textContent = site.slug + '.randhawa.vip';
+    document.title = site.title + ' · localconnect.site';
+    $('mp-address').textContent = site.slug + '.localconnect.site';
     $('mp-title').textContent = site.title;
-    $('mp-where').textContent = site.city ? 'Neighbor in ' + site.city + ', ' + site.state : 'Neighbor on randhawa.vip';
-    $('mp-about').textContent = site.about || ('Hi! I’m ' + site.title + (site.city ? ', a neighbor in ' + site.city : '') + '. Say hello on randhawa.vip.');
+    $('mp-where').textContent = site.city ? 'Neighbor in ' + site.city + ', ' + site.state : 'Neighbor on localconnect.site';
+    $('mp-about').textContent = site.about || ('Hi! I’m ' + site.title + (site.city ? ', a neighbor in ' + site.city : '') + '. Say hello on localconnect.site.');
     $('mp-since').textContent = 'Member since ' + new Date(site.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     $('mp-content').hidden = false;
     loadPosts(site);
@@ -59,7 +59,7 @@
           li.appendChild(el('p', 'post-body', p.body));
           var actions = el('div', 'post-actions');
           var rb = el('button', 'act', 'Replies'); rb.type = 'button';
-          var join = el('a', 'act', 'Reply on randhawa.vip'); join.href = 'https://randhawa.vip/#forum';
+          var join = el('a', 'act', 'Reply on localconnect.site'); join.href = 'https://localconnect.site/#forum';
           actions.append(rb, join);
           li.appendChild(actions);
           var thread = el('ul', 'replies'); thread.hidden = true; li.appendChild(thread);
@@ -73,7 +73,7 @@
               reps.forEach(function (rep) {
                 var r2 = el('li', 'reply');
                 var meta = el('div', 'post-meta');
-                if (rep.author_slug) { var a = el('a', 'author', rep.author_name); a.href = 'https://' + rep.author_slug + '.randhawa.vip/'; meta.appendChild(a); }
+                if (rep.author_slug) { var a = el('a', 'author', rep.author_name); a.href = 'https://' + rep.author_slug + '.localconnect.site/'; meta.appendChild(a); }
                 else meta.appendChild(el('span', 'author', rep.author_name));
                 meta.append(' · ' + when(rep.created_at));
                 r2.append(meta, el('p', 'reply-body', rep.body));

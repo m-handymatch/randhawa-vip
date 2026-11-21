@@ -1,22 +1,26 @@
-// randhawa.vip Worker: only listed IP addresses can open the site.
-// Runs before every request, on every address (randhawa.vip and *.workers.dev).
+// LocalConnect Worker (localconnect.site; randhawa.vip is the old address).
+// Runs before every request.
 //
-// Set the variable ALLOWED_IPS in Cloudflare:
-//   Workers & Pages -> randhawa-vip -> Settings -> Variables and Secrets
-// Comma-separated exact addresses and/or ranges (IPv4 or IPv6), e.g.
+// The site is open to everyone. To lock it to certain IP addresses again, set the
+// variable LOCK_TO_IPS in Cloudflare (Workers & Pages -> randhawa-vip -> Settings ->
+// Variables and Secrets) to comma-separated addresses and/or ranges, e.g.
 //   "98.97.27.131"   or   "98.97.0.0/16, 2001:db8::/32"
-// While ALLOWED_IPS is empty, everyone is blocked (the site stays private).
-// Set ALLOWED_IPS to * to open the site to everyone.
+// (The old ALLOWED_IPS variable is no longer used and can be deleted.)
 //
-// Member pages: any <name>.randhawa.vip shows member.html, which loads that member's page.
-// Needs a proxied DNS record for * and a Worker route for *.randhawa.vip/* (see README).
+// Member pages: any <name>.localconnect.site shows member.html, which loads that member's page.
+// Needs a proxied DNS record for * and a Worker route for *.localconnect.site/* (see README).
+const PRIMARY = 'localconnect.site';
+const OLD = 'randhawa.vip';
+// Set to true once localconnect.site is live, to send randhawa.vip visitors there.
+const REDIRECT_OLD = false;
+
 function privatePage(ip) {
   const safeIp = String(ip || 'unknown').replace(/[^0-9a-fA-F:.]/g, '');
   return '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>Private</title><body style="font:18px/1.5 system-ui,sans-serif;background:#E6F3FF;color:#1D2B4F;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;padding:24px">' +
-    '<div><p>randhawa.vip is private for now.</p>' +
+    '<div><p>This site is private for now.</p>' +
     '<p style="font-size:15px;color:#4A5878">Your address: <strong>' + safeIp + '</strong><br>' +
-    'If this is you, add it to ALLOWED_IPS in Cloudflare.</p></div></body>';
+    'If this is you, add it to LOCK_TO_IPS in Cloudflare.</p></div></body>';
 }
 
 // IP address -> { v: 4|6, n: BigInt }, or null if not an IP.
@@ -70,20 +74,29 @@ export function isAllowed(visitorIp, allowedList) {
 export default {
   async fetch(request, env) {
     const visitorIp = request.headers.get('CF-Connecting-IP');
-    if (!isAllowed(visitorIp, env.ALLOWED_IPS)) {
+    const lock = String(env.LOCK_TO_IPS || '').trim();
+    if (lock && !isAllowed(visitorIp, lock)) {
       return new Response(privatePage(visitorIp), {
         status: 403,
         headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
       });
     }
-    // www.randhawa.vip -> randhawa.vip, so there's one site (and one sign-in).
     const url = new URL(request.url);
-    if (url.hostname === 'www.randhawa.vip') {
-      url.hostname = 'randhawa.vip';
+    const host = url.hostname.toLowerCase();
+
+    // www -> bare domain, so there's one site (and one sign-in).
+    if (host === 'www.' + PRIMARY || host === 'www.' + OLD) {
+      url.hostname = REDIRECT_OLD || host === 'www.' + PRIMARY ? PRIMARY : OLD;
       return Response.redirect(url.toString(), 301);
     }
-    // <name>.randhawa.vip: the member's page. Other paths (styles, scripts, images) are shared.
-    const sub = url.hostname.match(/^([a-z0-9-]+)\.randhawa\.vip$/i);
+    // Old address -> new address (page paths and member pages keep their place).
+    if (REDIRECT_OLD && (host === OLD || host.endsWith('.' + OLD))) {
+      url.hostname = host === OLD ? PRIMARY : host.slice(0, -OLD.length) + PRIMARY;
+      return Response.redirect(url.toString(), 301);
+    }
+
+    // <name>.localconnect.site: the member's page. Other paths (styles, scripts, images) are shared.
+    const sub = host.match(/^([a-z0-9-]+)\.(localconnect\.site|randhawa\.vip)$/);
     if (sub && (url.pathname === '/' || url.pathname === '/index.html')) {
       const page = new URL('/member.html', url);
       const res = await env.ASSETS.fetch(new Request(page, request));
