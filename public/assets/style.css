@@ -210,6 +210,43 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 .map-open:focus-visible { outline: 3px solid var(--marigold); outline-offset: 2px; }
 .about-map .about-credit { margin-top: 6px; }
 .about-map .about-credit a { white-space: nowrap; }
+.about-county { margin-top: 8px; font-size: 14px; }
+.about-county a { color: inherit; }
+.today { margin-top: 16px; }
+.alert-banner {
+  margin-bottom: 12px; padding: 10px 14px; border: 2px solid var(--ink); border-radius: 14px; background: #FFE9A8;
+  font-size: 15px; display: flex; flex-direction: column; gap: 4px;
+}
+.alert-banner a { color: inherit; font-weight: 600; }
+.today-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.tile {
+  display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; text-decoration: none; color: var(--ink);
+  background: var(--white); border: 2px solid var(--ink); border-radius: 16px; box-shadow: 3px 3px 0 var(--ink);
+}
+.tile:hover { background: #F5FAFF; }
+.tile:focus-visible { outline: 3px solid var(--marigold); outline-offset: 2px; }
+.tile-label { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.tile-main { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.25; display: flex; align-items: center; gap: 8px; }
+.tile-sub { font-size: 14px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aqi-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; border: 2px solid var(--ink); }
+.today .about-credit { margin-top: 8px; }
+@media (max-width: 860px) { .today-grid { grid-template-columns: minmax(0, 1fr); } }
+.hv { display: inline-flex; align-items: baseline; gap: 6px; margin-top: 2px; font-family: var(--body); font-size: 14px; font-weight: 600; }
+.hv-chg { font-size: 13px; }
+.hv-chg.up { color: var(--leaf); }
+.hv-chg.down { color: #C0392B; }
+.oh-city { display: flex; flex-direction: column; min-width: 0; }
+.oh-row { flex-wrap: nowrap; }
+.oh-links { flex: none; }
+.schools { margin-bottom: 40px; border: 2px solid var(--ink); border-radius: 16px; padding: 12px 16px; background: var(--white); }
+.schools summary { cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 20px; }
+.schools-count { font-family: var(--body); font-size: 15px; font-weight: 400; color: var(--ink-soft); }
+.school-list { list-style: none; margin: 10px 0 0; padding: 0; max-height: 420px; overflow-y: auto; }
+.school { display: flex; flex-direction: column; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.school-name { font-weight: 600; font-size: 16px; }
+.school-name a { text-decoration: none; }
+.school-name a:hover { text-decoration: underline; }
+.school-meta { font-size: 14px; color: var(--ink-soft); }
 .news { background: var(--white); border-top: 2px solid var(--ink); padding: 40px 0 72px; }
 .news h2 { font-size: 32px; }
 .news .note { margin-top: 6px; color: var(--ink-soft); font-size: 16px; }

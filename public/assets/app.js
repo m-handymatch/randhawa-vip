@@ -280,6 +280,7 @@
       $('about-map-open').href = $('about-map-link').href = 'https://www.openstreetmap.org/?mlat=' + lat.toFixed(5) + '&mlon=' + lon.toFixed(5) + '#map=13/' + lat.toFixed(5) + '/' + lon.toFixed(5);
       $('about-map').hidden = false; card.classList.remove('no-map');
       $('about').hidden = false;
+      renderToday(lat, lon, token);
     });
 
     wikiCity(city, place.state).then(function (pg) {
@@ -305,6 +306,7 @@
           var host = site.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/.*$/, '');
           links.appendChild(link(site, 'City website (' + host + ')'));
         }
+        renderCounty(pg.pageprops && pg.pageprops.wikibase_item, token);
         if (!photo) { $('about-photo').hidden = true; card.classList.add('no-photo'); return; }
         var img = $('about-img');
         img.src = photo.src; img.alt = photo.alt || 'Photo of ' + city;
@@ -419,6 +421,195 @@
     });
   }
 
+
+  // ---------- County basics (Wikidata) ----------
+  function wdEntities(ids, props) {
+    return getJSON('https://www.wikidata.org/w/api.php?' + qs({ action: 'wbgetentities', format: 'json', origin: '*', ids: ids.join('|'), props: props, languages: 'en' }))
+      .then(function (r) { return (r && r.entities) || {}; });
+  }
+  function claimIds(ent, prop) {
+    return ((ent && ent.claims && ent.claims[prop]) || []).map(function (c) {
+      return c.mainsnak && c.mainsnak.datavalue && c.mainsnak.datavalue.value && c.mainsnak.datavalue.value.id;
+    }).filter(Boolean);
+  }
+  function claimString(ent, prop) {
+    var c = ((ent && ent.claims && ent.claims[prop]) || [])[0];
+    return c && c.mainsnak && c.mainsnak.datavalue ? c.mainsnak.datavalue.value : null;
+  }
+  function renderCounty(cityQid, token) {
+    var box = $('about-county'); box.hidden = true; box.innerHTML = '';
+    if (!cityQid) return;
+    wdEntities([cityQid], 'claims').then(function (ents) {
+      var parents = claimIds(ents[cityQid], 'P131').slice(0, 5);
+      return parents.length ? wdEntities(parents, 'labels|claims') : {};
+    }).then(function (ents) {
+      if (token !== aboutToken) return;
+      var county = Object.keys(ents).map(function (k) { return ents[k]; }).filter(function (e) {
+        var l = e.labels && e.labels.en && e.labels.en.value || '';
+        return /\b(County|Parish|Borough)$/.test(l);
+      })[0];
+      if (!county) return;
+      var name = county.labels.en.value;
+      var site = safeUrl(claimString(county, 'P856'));
+      var seatId = claimIds(county, 'P36')[0];
+      return (seatId ? wdEntities([seatId], 'labels') : Promise.resolve({})).then(function (se) {
+        if (token !== aboutToken) return;
+        var seat = seatId && se[seatId] && se[seatId].labels && se[seatId].labels.en ? se[seatId].labels.en.value : null;
+        var strong = document.createElement('strong'); strong.textContent = name;
+        box.append(strong);
+        if (seat) box.append(' · County seat: ' + seat);
+        if (site) { box.append(' · '); box.appendChild(link(site, 'County website')); }
+        box.hidden = false;
+      });
+    }).catch(function () {});
+  }
+
+  // ---------- Today: weather + alerts (NWS), air quality (Open-Meteo), earthquakes (USGS) ----------
+  function aqiCategory(v) {
+    if (v <= 50) return ['Good', '#23A866'];
+    if (v <= 100) return ['Moderate', '#E8B90C'];
+    if (v <= 150) return ['Unhealthy for sensitive groups', '#F0802A'];
+    if (v <= 200) return ['Unhealthy', '#D93A3A'];
+    if (v <= 300) return ['Very unhealthy', '#8F3F97'];
+    return ['Hazardous', '#7E0023'];
+  }
+  function ago(ms) {
+    var h = Math.round((Date.now() - ms) / 3600e3);
+    if (h < 1) return 'less than an hour ago';
+    if (h < 24) return h + (h === 1 ? ' hour ago' : ' hours ago');
+    var d = Math.round(h / 24); return d + (d === 1 ? ' day ago' : ' days ago');
+  }
+  function untilText(iso) {
+    var t = Date.parse(iso || ''); if (isNaN(t)) return '';
+    return ' until ' + new Date(t).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  }
+  function renderToday(lat, lon, token) {
+    var pt = lat.toFixed(4) + ',' + lon.toFixed(4);
+    $('today').hidden = false;
+    $('wx-tile').href = 'https://forecast.weather.gov/MapClick.php?lat=' + lat.toFixed(4) + '&lon=' + lon.toFixed(4);
+    ['wx-main', 'aqi-main', 'quake-main'].forEach(function (id) { $(id).textContent = '…'; });
+    ['wx-sub', 'aqi-sub', 'quake-sub'].forEach(function (id) { $(id).textContent = ''; });
+    $('wx-alerts').hidden = true;
+
+    getJSON('https://api.weather.gov/points/' + pt).then(function (p) {
+      return getJSON(p.properties.forecast);
+    }).then(function (f) {
+      if (token !== aboutToken) return;
+      var ps = (f.properties && f.properties.periods) || [];
+      if (!ps.length) throw new Error('no periods');
+      $('wx-main').textContent = ps[0].temperature + '°' + (ps[0].temperatureUnit === 'C' ? 'C' : '') + ' ' + ps[0].shortForecast;
+      $('wx-sub').textContent = ps[0].name + (ps[1] ? ' · ' + ps[1].name + ' ' + ps[1].temperature + '°' : '');
+    }).catch(function () { if (token === aboutToken) $('wx-main').textContent = 'Forecast unavailable'; });
+
+    getJSON('https://api.weather.gov/alerts/active?point=' + pt).then(function (r) {
+      if (token !== aboutToken) return;
+      var feats = (r.features || []).slice(0, 3);
+      var box = $('wx-alerts'); box.innerHTML = '';
+      if (!feats.length) return;
+      feats.forEach(function (ft) {
+        var pr = ft.properties || {};
+        var row = document.createElement('p');
+        var strong = document.createElement('strong'); strong.textContent = pr.event || 'Weather alert';
+        row.appendChild(strong);
+        row.append(untilText(pr.ends || pr.expires));
+        if (pr.areaDesc) row.title = pr.headline || pr.areaDesc;
+        box.appendChild(row);
+      });
+      var more = link($('wx-tile').href, 'Details from the National Weather Service');
+      var p = document.createElement('p'); p.appendChild(more); box.appendChild(p);
+      box.hidden = false;
+    }).catch(function () {});
+
+    getJSON('https://air-quality-api.open-meteo.com/v1/air-quality?' + qs({ latitude: lat.toFixed(3), longitude: lon.toFixed(3), current: 'us_aqi', timezone: 'auto' })).then(function (r) {
+      if (token !== aboutToken) return;
+      var v = r && r.current && r.current.us_aqi;
+      if (typeof v !== 'number') throw new Error('no aqi');
+      var cat = aqiCategory(v);
+      $('aqi-main').textContent = 'AQI ' + Math.round(v);
+      $('aqi-dot').style.background = cat[1];
+      $('aqi-sub').textContent = cat[0];
+    }).catch(function () { if (token === aboutToken) { $('aqi-main').textContent = 'Unavailable'; $('aqi-dot').style.background = 'transparent'; } });
+
+    var since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+    getJSON('https://earthquake.usgs.gov/fdsnws/event/1/query?' + qs({ format: 'geojson', latitude: lat.toFixed(4), longitude: lon.toFixed(4), maxradiuskm: 100, minmagnitude: 2.5, starttime: since, orderby: 'time', limit: 20 })).then(function (r) {
+      if (token !== aboutToken) return;
+      var q = r.features || [];
+      $('quake-tile').href = 'https://earthquake.usgs.gov/earthquakes/map/';
+      if (!q.length) { $('quake-main').textContent = 'None this week'; $('quake-sub').textContent = 'M2.5+ within 60 miles'; return; }
+      var top = q[0].properties;
+      $('quake-main').textContent = 'M' + Number(top.mag).toFixed(1) + ' · ' + ago(top.time);
+      $('quake-sub').textContent = (top.place || '') + (q.length > 1 ? ' · ' + q.length + ' this week' : '');
+      if (safeUrl(top.url)) $('quake-tile').href = top.url;
+    }).catch(function () { if (token === aboutToken) $('quake-main').textContent = 'Unavailable'; });
+  }
+
+  // ---------- Public schools in the home ZIP (NCES Common Core of Data) ----------
+  var SCHOOL_ORDER = { 'Elementary': 1, 'Middle': 2, 'High': 3, 'Secondary': 3, 'Other': 5 };
+  function grade(g) { g = String(g || '').trim(); return g === 'KG' ? 'K' : g === 'PK' ? 'PreK' : g.replace(/^0/, ''); }
+  function loadSchools(zip) {
+    var box = $('schools'), list = $('school-list');
+    list.innerHTML = ''; box.hidden = true;
+    if (!zip) return;
+    var url = 'https://services1.arcgis.com/Ua5sjt3LWTPigjyD/ArcGIS/rest/services/School_Characteristics_Current/FeatureServer/1/query?' + qs({
+      where: "LZIP='" + zip + "' AND SY_STATUS_TEXT='Open' AND VIRTUAL<>'Full Virtual'",
+      outFields: 'SCH_NAME,GSLO,GSHI,SCHOOL_LEVEL,TOTAL,LSTREET1,CHARTER_TEXT,NCESSCH,SURVYEAR',
+      returnGeometry: 'false', resultRecordCount: 60, f: 'json'
+    });
+    getJSON(url).then(function (r) {
+      if (zip !== (state.profile && state.profile.zip)) return;
+      var rows = (r.features || []).map(function (f) { return f.attributes || {}; });
+      if (!rows.length) return;
+      rows.sort(function (a, b) {
+        return (SCHOOL_ORDER[a.SCHOOL_LEVEL] || 4) - (SCHOOL_ORDER[b.SCHOOL_LEVEL] || 4) || String(a.SCH_NAME).localeCompare(String(b.SCH_NAME));
+      });
+      rows.forEach(function (a) {
+        var li = document.createElement('li'); li.className = 'school';
+        var name = /^\d{12}$/.test(String(a.NCESSCH))
+          ? link('https://nces.ed.gov/ccd/schoolsearch/school_detail.asp?ID=' + a.NCESSCH, a.SCH_NAME)
+          : document.createTextNode(a.SCH_NAME);
+        var h = document.createElement('span'); h.className = 'school-name'; h.appendChild(name);
+        var meta = [];
+        if (a.GSLO && a.GSHI) meta.push('Grades ' + grade(a.GSLO) + '–' + grade(a.GSHI));
+        if (a.TOTAL > 0) meta.push(Number(a.TOTAL).toLocaleString() + ' students');
+        if (a.CHARTER_TEXT === 'Yes') meta.push('Charter');
+        if (a.LSTREET1) meta.push(a.LSTREET1);
+        var m = document.createElement('span'); m.className = 'school-meta'; m.textContent = meta.join(' · ');
+        li.append(h, m); list.appendChild(li);
+      });
+      $('schools-title').textContent = 'Public schools in ' + zip;
+      $('schools-count').textContent = '(' + rows.length + ')';
+      if (rows[0].SURVYEAR) $('schools-year').textContent = String(rows[0].SURVYEAR).replace('-', '–');
+      box.hidden = false;
+    }).catch(function () {});
+  }
+
+  // ---------- Home values (Zillow Research ZHVI, refreshed monthly into data/home-values/) ----------
+  var hvCache = {};
+  function homeValues(st) {
+    if (!hvCache[st]) {
+      hvCache[st] = fetch('data/home-values/' + encodeURIComponent(st) + '.json', { cache: 'no-cache' })
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }
+    return hvCache[st];
+  }
+  function money(v) {
+    return v >= 1e6 ? '$' + (v / 1e6).toFixed(v >= 1e7 ? 1 : 2).replace(/\.?0+$/, '') + 'M' : '$' + Math.round(v / 1e3) + 'K';
+  }
+  function hvBadge(pair) {
+    var span = document.createElement('span'); span.className = 'hv';
+    var val = document.createElement('span'); val.className = 'hv-val'; val.textContent = money(pair[0]);
+    span.appendChild(val);
+    if (typeof pair[1] === 'number') {
+      var chg = document.createElement('span');
+      chg.className = 'hv-chg ' + (pair[1] >= 0 ? 'up' : 'down');
+      chg.textContent = (pair[1] >= 0 ? '▲' : '▼') + Math.abs(pair[1]).toFixed(1) + '%';
+      chg.title = 'Change over the last 12 months';
+      span.appendChild(chg);
+    }
+    span.title = 'Typical home value (Zillow Home Value Index)';
+    return span;
+  }
+
   // ---------- Open houses: links to each site's own open-house search ----------
   function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 
@@ -434,8 +625,9 @@
   }
 
   function renderOpenHouses() {
-    var list = $('oh-list'); list.innerHTML = '';
+    var list = $('oh-list'); list.innerHTML = ''; $('hv-credit').hidden = true;
     var p = state.profile;
+    if (p && p.zip !== loadSchools.lastZip) { loadSchools.lastZip = p && p.zip; loadSchools(p && p.zip); }
     if (!p || !p.zip) return;
     lookupZip(p.zip).then(function (home) {
       if (!home) return;
@@ -453,12 +645,27 @@
       cities.forEach(function (c) {
         var li = document.createElement('li'); li.className = 'oh-row';
         var name = document.createElement('span'); name.className = 'oh-city'; name.textContent = c.city;
+        c.nameEl = name;
         var links = document.createElement('span'); links.className = 'oh-links';
         links.appendChild(ohLink('https://www.zillow.com/' + slug(c.city) + '-' + c.st.toLowerCase() + '/open-house/', 'Zillow'));
         if (c.zip) links.appendChild(ohLink('https://www.redfin.com/zipcode/' + c.zip + '/open-houses', 'Redfin'));
         links.appendChild(ohLink('https://www.realtor.com/realestateandhomes-search/' + encodeURIComponent(c.city.replace(/ /g, '-')) + '_' + c.st + '/show-open-house', 'Realtor.com'));
         li.append(name, links);
         list.appendChild(li);
+      });
+      return homeValues(cities[0].st).then(function (hv) {
+        if (!hv) return;
+        var any = false;
+        cities.forEach(function (c, i) {
+          var pair = (hv.cities && hv.cities[c.city.toLowerCase()]) || (i === 0 && hv.zips && hv.zips[c.zip]);
+          if (c.st !== cities[0].st) return;
+          if (pair) { c.nameEl.appendChild(hvBadge(pair)); any = true; }
+        });
+        if (any && hv.month) {
+          var mm = /^(\d{4})-(\d\d)$/.exec(hv.month);
+          $('hv-month').textContent = mm ? MONTH_ABBR[Number(mm[2]) - 1] + ' ' + mm[1] : hv.month;
+          $('hv-credit').hidden = false;
+        }
       });
     });
   }

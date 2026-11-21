@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20261120q">
+  <link rel="stylesheet" href="assets/style.css?v=20261121a">
   <link rel="icon" href="assets/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
@@ -130,6 +130,7 @@
             <h2 id="about-title">About your city</h2>
             <p id="about-extract"></p>
             <p class="about-links" id="about-links"></p>
+            <p class="about-county" id="about-county" hidden></p>
             <p class="about-credit" id="about-text-credit" hidden>Excerpt from <a id="about-wiki-credit" href="#" rel="noopener" target="_blank">Wikipedia</a>, shared under <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener license" target="_blank">CC BY-SA 4.0</a>.</p>
           </div>
           <div class="about-map" id="about-map" hidden>
@@ -140,6 +141,27 @@
             <p class="about-credit">Map &copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap contributors</a> &middot; <a id="about-map-link" href="#" rel="noopener" target="_blank">Larger map</a></p>
           </div>
         </article>
+        <div class="today" id="today" hidden>
+          <div class="alert-banner" id="wx-alerts" role="status" hidden></div>
+          <div class="today-grid">
+            <a class="tile" id="wx-tile" href="#" target="_blank" rel="noopener">
+              <span class="tile-label">Weather</span>
+              <span class="tile-main" id="wx-main">…</span>
+              <span class="tile-sub" id="wx-sub"></span>
+            </a>
+            <a class="tile" id="aqi-tile" href="https://www.airnow.gov/" target="_blank" rel="noopener">
+              <span class="tile-label">Air quality</span>
+              <span class="tile-main"><span class="aqi-dot" id="aqi-dot"></span><span id="aqi-main">…</span></span>
+              <span class="tile-sub" id="aqi-sub"></span>
+            </a>
+            <a class="tile" id="quake-tile" href="https://earthquake.usgs.gov/earthquakes/map/" target="_blank" rel="noopener">
+              <span class="tile-label">Earthquakes</span>
+              <span class="tile-main" id="quake-main">…</span>
+              <span class="tile-sub" id="quake-sub"></span>
+            </a>
+          </div>
+          <p class="about-credit">Weather and alerts: National Weather Service. Air quality: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>. Earthquakes: U.S. Geological Survey.</p>
+        </div>
       </div>
     </div>
 
@@ -150,7 +172,13 @@
             <h2 id="oh-title">Open houses</h2>
             <p class="note">See upcoming open houses on each site. Links open in a new tab.</p>
             <ul class="oh-list" id="oh-list"></ul>
+            <p class="about-credit" id="hv-credit" hidden>Typical home values: <a href="https://www.zillow.com/research/data/" target="_blank" rel="noopener">Zillow Home Value Index</a> (Zillow Research), <span id="hv-month"></span>; change over 12 months.</p>
           </section>
+          <details class="schools" id="schools" hidden>
+            <summary><span id="schools-title">Public schools</span> <span class="schools-count" id="schools-count"></span></summary>
+            <ul class="school-list" id="school-list"></ul>
+            <p class="about-credit">Source: National Center for Education Statistics, Common Core of Data, <span id="schools-year">2024–25</span>.</p>
+          </details>
           <h2 id="events-title">Upcoming events</h2>
           <p class="note" id="events-note">Happening in your city and the cities you picked. Tap one for details.</p>
           <p class="loading" id="events-loading" role="status">Looking for events nearby…</p>
@@ -173,11 +201,11 @@
 
 <footer class="foot">
   <div class="wrap">
-    <p>randhawa.vip connects neighbors. Headlines come from publishers via NewsData.io and Google News, and link to the original stories. Events are found with Google via SerpApi and link to their organizers. City facts and photos come from Wikipedia and Wikimedia Commons; maps from OpenStreetMap.</p>
+    <p>randhawa.vip connects neighbors. Headlines come from publishers via NewsData.io and Google News, and link to the original stories. Events are found with Google via SerpApi and link to their organizers. City facts and photos come from Wikipedia and Wikimedia Commons; maps from OpenStreetMap; weather and alerts from the National Weather Service; earthquakes from USGS; schools from NCES; home values from Zillow Research.</p>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="assets/app.js?v=20261120q"></script>
+<script src="assets/app.js?v=20261121a"></script>
 </body>
 </html>
