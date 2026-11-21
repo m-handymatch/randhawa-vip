@@ -42,22 +42,6 @@ def rows_from(ctype, data):
     return list(csv.DictReader(io.StringIO(txt)))
 
 
-ADDR = re.compile(r",\s*([^,]+?),\s*([A-Za-z .]+?)\s+(\d{5})(?:-\d{4})?\s*$")
-STATES = {n.lower(): c for n, c in [
-    ("Alabama","AL"),("Alaska","AK"),("Arizona","AZ"),("Arkansas","AR"),("California","CA"),
-    ("Colorado","CO"),("Connecticut","CT"),("Delaware","DE"),("District of Columbia","DC"),
-    ("Florida","FL"),("Georgia","GA"),("Hawaii","HI"),("Idaho","ID"),("Illinois","IL"),
-    ("Indiana","IN"),("Iowa","IA"),("Kansas","KS"),("Kentucky","KY"),("Louisiana","LA"),
-    ("Maine","ME"),("Maryland","MD"),("Massachusetts","MA"),("Michigan","MI"),("Minnesota","MN"),
-    ("Mississippi","MS"),("Missouri","MO"),("Montana","MT"),("Nebraska","NE"),("Nevada","NV"),
-    ("New Hampshire","NH"),("New Jersey","NJ"),("New Mexico","NM"),("New York","NY"),
-    ("North Carolina","NC"),("North Dakota","ND"),("Ohio","OH"),("Oklahoma","OK"),("Oregon","OR"),
-    ("Pennsylvania","PA"),("Rhode Island","RI"),("South Carolina","SC"),("South Dakota","SD"),
-    ("Tennessee","TN"),("Texas","TX"),("Utah","UT"),("Vermont","VT"),("Virginia","VA"),
-    ("Washington","WA"),("West Virginia","WV"),("Wisconsin","WI"),("Wyoming","WY"),
-    ("Puerto Rico","PR"),("Guam","GU"),("Virgin Islands","VI")]}
-
-
 def pick(row, *keys):
     low = {str(k).lower().strip(): v for k, v in row.items()}
     for k in keys:
@@ -97,21 +81,12 @@ def main():
         if not (-90 < lat < 90 and -180 < lon < 180) or (lat == 0 and lon == 0):
             continue
         addr = clean(pick(r, "location_address"), 200)
-        m_ = ADDR.search(addr)
-        if m_:
-            city, zc, street = m_.group(1).strip(), m_.group(3), addr[:m_.start()].strip(" ,")
-        else:
-            z = re.search(r"(\d{5})(?:-\d{4})?\s*$", addr)
-            parts = [p.strip() for p in addr.split(",") if p.strip()]
-            city = parts[-2] if len(parts) >= 3 else ""
-            zc, street = (z.group(1) if z else ""), addr
+        addr = re.sub(r",?\s*(USA|United States)\.?$", "", addr, flags=re.I).strip(" ,")
         pay = pick(r, "fnap") + pick(r, "acceptedpayment")
         m = {
             "id": pick(r, "listing_id"),
             "name": clean(pick(r, "listing_name"), 120),
-            "street": street[:140],
-            "city": city[:60],
-            "zip": zc,
+            "addr": addr,
             "lat": round(lat, 5), "lon": round(lon, 5),
             "about": clean(pick(r, "listing_desc"), 280),
             "where": clean(pick(r, "location_site"), 80).strip("; ").replace(";", ", "),
@@ -126,12 +101,23 @@ def main():
     if sum(len(v) for v in by_state.values()) < 500:
         print("Too few markets parsed; not writing.")
         sys.exit(1)
+    # The directory has the same market listed more than once (renamed or
+    # re-registered). Keep the most recently updated listing within ~250 m.
+    for tile, ms in by_state.items():
+        ms.sort(key=lambda m: m["updated"], reverse=True)
+        kept = []
+        for m in ms:
+            if not any(abs(m["lat"] - k["lat"]) < 0.0023 and
+                       abs(m["lon"] - k["lon"]) < 0.0023 / max(0.2, math.cos(math.radians(m["lat"])))
+                       for k in kept):
+                kept.append(m)
+        by_state[tile] = kept
     os.makedirs(OUT, exist_ok=True)
     for old in os.listdir(OUT):
         if old.endswith(".json"):
             os.remove(os.path.join(OUT, old))
     for st, ms in by_state.items():
-        ms.sort(key=lambda m: (m["city"], m["name"]))
+        ms.sort(key=lambda m: m["name"])
         with open(os.path.join(OUT, f"{st}.json"), "w") as f:
             json.dump({"source": "USDA National Farmers Market Directory", "markets": ms}, f,
                       separators=(",", ":"))
