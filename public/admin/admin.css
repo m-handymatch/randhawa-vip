@@ -1,3 +1,4 @@
+[hidden] { display: none !important; }
 :root {
   --bg: #EEF3EF; --ink: #14284B; --ink-soft: #4B5A6E; --line: #D5E0D8; --white: #fff;
   --forest: #1E6B47; --leaf: #2F8F4E; --lime: #E6F2DC; --teal: #1F8A84; --warn: #9A6700; --warn-bg: #FFF6DA;

@@ -175,15 +175,32 @@
       f.password.value = '';
     });
   });
-  $('signout').addEventListener('click', function () { db.auth.signOut(); });
+  // Sign out here first (no network needed), then end the session on the server too.
+  $('signout').addEventListener('click', function () {
+    var btn = this; btn.disabled = true;
+    db.auth.signOut({ scope: 'local' }).catch(function () {}).then(function () {
+      try {
+        Object.keys(localStorage).forEach(function (k) { if (/^sb-.*-auth-token/.test(k)) localStorage.removeItem(k); });
+      } catch (e) { /* storage blocked */ }
+      showSignedOut();
+      btn.disabled = false;
+    });
+  });
 
   var last;
+  function showSignedOut() {
+    last = null;
+    $('signin').hidden = false; $('who').hidden = true;
+    $('app').hidden = true; $('not-admin').hidden = true; $('loading').hidden = true;
+    ledger = []; $('ledger').innerHTML = ''; $('next').innerHTML = ''; $('stats').innerHTML = '';
+  }
   db.auth.onAuthStateChange(function (_e, session) {
     var id = session ? session.user.id : null;
-    if (id === last) return;
+    if (id === last && last !== undefined) return;
+    if (!session) { showSignedOut(); return; }
     last = id;
-    $('signin').hidden = !!session; $('who').hidden = !session;
+    $('signin').hidden = true; $('who').hidden = false;
     $('app').hidden = true; $('not-admin').hidden = true; $('loading').hidden = true;
-    if (session) { $('who-email').textContent = session.user.email; start(); }
+    $('who-email').textContent = session.user.email; start();
   });
 })();
