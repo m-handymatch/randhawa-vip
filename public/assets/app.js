@@ -743,7 +743,38 @@
     });
   }
 
+  // Last events shown for this ZIP + nearby cities, so the box fills at once
+  // while fresh results load (browser storage can be missing: ignore errors).
+  function eventsCacheKey() {
+    var p = state.profile || {};
+    return 'rv-events:' + p.zip + '|' + (p.nearby_places || []).join(';');
+  }
+  function readEventsCache() {
+    try { return JSON.parse(localStorage.getItem(eventsCacheKey()) || 'null'); } catch (e) { return null; }
+  }
+  function writeEventsCache(data) {
+    try {
+      Object.keys(localStorage).forEach(function (k) { if (k.indexOf('rv-events:') === 0) localStorage.removeItem(k); });
+      localStorage.setItem(eventsCacheKey(), JSON.stringify({ at: Date.now(), places: data.places || [], events: data.events || [] }));
+    } catch (e) { /* storage full or blocked */ }
+  }
+  function showEventsNote(places) {
+    $('events-note').textContent = places.length ? 'From ' + listJoin(places) + '.' : 'Around you and your nearby cities.';
+    $('events-note').title = $('events-note').textContent;
+  }
+  function showEvents(places, events) {
+    var today = new Date(); var iso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    events = events.filter(function (e) { return !e.start || e.start >= iso; });
+    showEventsNote(places);
+    $('events-empty').hidden = true; $('events-loading').hidden = true;
+    renderEvents(events);
+    $('events-count').textContent = events.length + ' upcoming';
+    return events.length;
+  }
+
+  var eventsToken = 0;
   function loadEvents() {
+    var token = ++eventsToken;
     renderOpenHouses();
     document.dispatchEvent(new CustomEvent('rv:area-changed'));
     $('events').innerHTML = ''; $('events-empty').hidden = true; $('events-loading').hidden = false;
@@ -753,17 +784,28 @@
       eventsEmpty(['Add your ZIP code to see events near you.']);
       return;
     }
+    var cached = readEventsCache(), shownCached = false;
+    if (cached && cached.events && cached.events.length) {
+      shownCached = showEvents(cached.places || [], cached.events) > 0;
+      if (shownCached) $('events-count').textContent = 'Updating\u2026';
+    }
     db.functions.invoke('local-events', { method: 'GET' }).then(function (r) {
+      if (token !== eventsToken) return;
       $('events-loading').hidden = true;
-      if (r.error) { eventsEmpty(['We couldn’t load events right now.', 'Try again in a few minutes.']); return; }
+      if (r.error) {
+        if (shownCached) { $('events-count').textContent = $('events').children.length + ' upcoming'; return; }
+        eventsEmpty(['We couldn\u2019t load events right now.', 'Try again in a few minutes.']); return;
+      }
       var events = (r.data && r.data.events) || [];
       var evPlaces = (r.data && r.data.places) || [];
-      $('events-note').textContent = evPlaces.length ? 'From ' + listJoin(evPlaces) + '.' : 'Around you and your nearby cities.';
-      $('events-note').title = $('events-note').textContent;
-      if (r.data && r.data.configured === false) { eventsEmpty(['Events are almost ready.', 'The events service still needs its key.']); return; }
-      if (!events.length) { eventsEmpty(['No upcoming events found nearby yet.', 'Check back tomorrow.']); return; }
-      renderEvents(events);
-      $('events-count').textContent = events.length + ' upcoming';
+      if (r.data && r.data.configured === false) { showEventsNote(evPlaces); eventsEmpty(['Events are almost ready.', 'The events service still needs its key.']); return; }
+      if (!events.length) {
+        if (shownCached) { $('events-count').textContent = $('events').children.length + ' upcoming'; return; }
+        showEventsNote(evPlaces);
+        eventsEmpty(['No upcoming events found nearby yet.', 'Check back tomorrow.']); return;
+      }
+      showEvents(evPlaces, events);
+      writeEventsCache(r.data);
     });
   }
 

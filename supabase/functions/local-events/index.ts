@@ -3,6 +3,7 @@
 // Source: Google Events results via SerpApi (engine=google_events).
 // SerpApi's free plan has 250 searches a month, so:
 //   - each city is looked up at most once every EVENTS_CACHE_HOURS (default 24) and saved in local_events_cache;
+//   - once a city has saved events they are returned at once and refreshed in the background;
 //   - every SerpApi call first takes a slot from a monthly budget (EVENTS_MONTHLY_LIMIT, default 240);
 //     when the budget is used up, saved (older) results are shown instead.
 //
@@ -115,7 +116,21 @@ async function placeEvents(db: SupabaseClient, city: string, state: string, apiK
   const fresh = cached && Date.now() - new Date(cached.fetched_at).getTime() < CACHE_HOURS * 3600e3;
   if (fresh) return cached!.events as LocalEvent[];
   const stale = (cached?.events as LocalEvent[] | undefined) ?? [];
-  if (!apiKey || !(await takeBudget(db))) return stale;
+  if (!apiKey) return stale;
+  // Stale-while-revalidate: when this city has saved events, answer with them right
+  // away and refresh in the background, so nobody waits on the slow search.
+  if (cached) {
+    const job = refreshPlace(db, key, city, state, apiKey, stale).catch(() => stale);
+    // deno-lint-ignore no-explicit-any
+    const rt = (globalThis as any).EdgeRuntime;
+    if (rt?.waitUntil) rt.waitUntil(job); else await job;
+    return stale;
+  }
+  return await refreshPlace(db, key, city, state, apiKey, stale);
+}
+
+async function refreshPlace(db: SupabaseClient, key: string, city: string, state: string, apiKey: string, stale: LocalEvent[]): Promise<LocalEvent[]> {
+  if (!(await takeBudget(db))) return stale;
 
   const stateName = STATE_NAMES[state] ?? state;
   const url = "https://serpapi.com/search.json?" + new URLSearchParams({
@@ -127,6 +142,11 @@ async function placeEvents(db: SupabaseClient, city: string, state: string, apiK
     await db.from("local_events_cache").upsert({ area_key: key, city, state, events: stale, fetched_at: at });
     return stale;
   };
+  // Claim this refresh: other visitors see the saved events as fresh for RETRY_HOURS.
+  await db.from("local_events_cache").upsert({
+    area_key: key, city, state, events: stale,
+    fetched_at: new Date(Date.now() - Math.max(0, CACHE_HOURS - RETRY_HOURS) * 3600e3).toISOString(),
+  });
   try {
     // Google Events through SerpApi can take 15-30 seconds for some cities.
     const res = await fetch(url, { signal: AbortSignal.timeout(45000) });
