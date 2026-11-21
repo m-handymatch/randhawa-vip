@@ -8,8 +8,8 @@ Runs on the Supabase project **zip-zcta** (`pipzvzxcfvsxyiwmqpyv`, region us-wes
 
 1. A user signs up with Supabase Auth. A profile is created automatically; pass `zip` (and optionally `display_name`) as user metadata at sign-up, or let them set it later.
 2. The app calls the `local-news` Edge Function with the user's session token.
-3. The function reads the profile ZIP (or `?zip=12345`), looks it up in `zip_zcta` to get city, state and ZCTA, and returns news for that city.
-4. News comes from NewsData.io and is cached per city for 3 hours in `local_news_cache`. Only headlines, short summaries and links are returned.
+3. The function reads the profile ZIP (or `?zip=12345`), looks it up in `zip_zcta` to get city, state and ZCTA, and returns up to 30 headlines for that city plus up to 5 **nearby places** saved on the profile.
+4. The home city uses NewsData.io and the Google News search feed; nearby places use Google News only (no credits). Each place gets a fair share of the list, Google headlines must name the place and the search requires the state name. Results are cached per place for 3 hours in `local_news_cache`. Only headlines, short summaries and links are returned.
 
 ## Setup
 

@@ -3,8 +3,8 @@
 // 1. Checks the user's login (Supabase Auth token in the Authorization header).
 // 2. Reads the ZIP on their profile (or ?zip= for any valid US ZIP).
 // 3. Looks the ZIP up in zip_zcta to get city, state and ZCTA.
-// 4. Returns cached news for that city if it's fresh; otherwise asks
-//    NewsData.io, saves the result, and returns it.
+// 4. Gathers news for the city (NewsData.io + Google News) and for the
+//    nearby places on the profile (Google News), caching each place.
 //
 // Needs the secret NEWSDATA_API_KEY (Supabase dashboard -> Edge Functions -> Secrets).
 // Only headlines, short summaries and links are returned, never full articles.
@@ -12,7 +12,6 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const CACHE_HOURS = Number(Deno.env.get("NEWS_CACHE_HOURS") ?? "3");
-const MAX_ARTICLES = 10;
 
 const ALLOWED_ORIGINS = new Set([
   "https://randhawa.vip",
@@ -50,7 +49,20 @@ function reply(status: number, body: unknown, origin: string | null) {
   });
 }
 
-type Article = { title: string; link: string; source: string | null; published: string | null; image: string | null; summary: string | null };
+type Article = {
+  title: string; link: string; source: string | null; published: string | null;
+  image: string | null; summary: string | null; place?: string;
+};
+
+const MAX_RESULTS = 30;
+
+// Dates come as "2026-11-20 16:20:25" (NewsData, UTC) or RFC 822 (Google). Return ISO.
+function isoDate(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const v = /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/.test(value) ? value.replace(" ", "T") + "Z" : value;
+  const t = Date.parse(v);
+  return isNaN(t) ? null : new Date(t).toISOString();
+}
 
 function tidy(raw: any): Article | null {
   if (!raw?.title || !raw?.link) return null;
@@ -59,45 +71,124 @@ function tidy(raw: any): Article | null {
     title: String(raw.title).slice(0, 300),
     link: String(raw.link),
     source: raw.source_name ?? raw.source_id ?? null,
-    published: raw.pubDate ?? null,
+    published: isoDate(raw.pubDate),
     image: raw.image_url ?? null,
     summary: summary || null,
   };
 }
 
-async function fetchNews(apiKey: string, city: string, state: string): Promise<Article[]> {
+// ---- NewsData.io (uses credits; only for the home city) ----
+async function newsDataNews(apiKey: string, city: string, state: string): Promise<Article[]> {
   const stateName = STATE_NAMES[state] ?? state.toLowerCase();
   const base = "https://newsdata.io/api/1/latest";
   const common = { apikey: apiKey, country: "us", language: "en", removeduplicate: "1" };
-
-  // Several ways to ask; the region filter isn't honored on every plan, so every
-  // result is kept only if it actually mentions the city.
+  // The region filter isn't honored on every plan, so keep only results that mention the city.
   const attempts = [
     { ...common, qInTitle: `"${city}"` },
     { ...common, region: `${city.toLowerCase()}-${stateName}-united states of america` },
     { ...common, q: `"${city}"` },
   ];
-
   const cityLower = city.toLowerCase();
   const mentionsCity = (a: Article) =>
     a.title.toLowerCase().includes(cityLower) || (a.summary ?? "").toLowerCase().includes(cityLower);
 
   const found: Article[] = [];
-  const seen = new Set<string>();
   for (const params of attempts) {
-    const res = await fetch(`${base}?${new URLSearchParams(params)}`);
-    if (!res.ok) continue;
+    const res = await fetch(`${base}?${new URLSearchParams(params)}`).catch(() => null);
+    if (!res?.ok) continue;
     const body = await res.json().catch(() => null);
     if (body?.status !== "success" || !Array.isArray(body.results)) continue;
-    for (const a of body.results.map(tidy).filter(Boolean) as Article[]) {
-      if (!mentionsCity(a) || seen.has(a.link) || seen.has(a.title)) continue;
-      seen.add(a.link); seen.add(a.title);
-      found.push(a);
-    }
-    if (found.length >= MAX_ARTICLES) break;
+    for (const a of body.results.map(tidy).filter(Boolean) as Article[]) if (mentionsCity(a)) found.push(a);
+    if (found.length >= 10) break;
   }
-  found.sort((x, y) => (y.published ?? "").localeCompare(x.published ?? ""));
-  return found.slice(0, MAX_ARTICLES);
+  return found;
+}
+
+// ---- Google News search feed (free, no key) ----
+function decodeXml(s: string): string {
+  return s
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+    .replace(/&amp;/g, "&")
+    .trim();
+}
+
+function tag(item: string, name: string): string | null {
+  const m = item.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`));
+  return m ? decodeXml(m[1]) : null;
+}
+
+async function googleNews(place: string, state: string): Promise<Article[]> {
+  const stateName = STATE_NAMES[state] ?? state;
+  // Both the place and the state name must appear, so "Oakland" doesn't match Oakland, Michigan.
+  const q = `"${place}" "${stateName}" when:3d`;
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
+  const res = await fetch(url, { headers: { "User-Agent": "randhawa.vip local news" } }).catch(() => null);
+  if (!res?.ok) return [];
+  const xml = await res.text();
+  const items = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
+  const out: Article[] = [];
+  for (const item of items.slice(0, 40)) {
+    let title = tag(item, "title");
+    const link = tag(item, "link");
+    if (!title || !link || !/^https:\/\//.test(link)) continue;
+    const source = tag(item, "source");
+    if (source && title.endsWith(` - ${source}`)) title = title.slice(0, -(source.length + 3));
+    // Keep only headlines that name the place; the rest are usually statewide or national.
+    if (!title.toLowerCase().includes(place.toLowerCase())) continue;
+    out.push({ title: title.slice(0, 300), link, source, published: isoDate(tag(item, "pubDate")), image: null, summary: null });
+  }
+  return out;
+}
+
+// One place's articles, cached per place for CACHE_HOURS.
+async function placeNews(
+  db: any, place: string, state: string, withNewsData: boolean, apiKey: string | undefined,
+): Promise<Article[]> {
+  const areaKey = `${place.toLowerCase()}|${state}${withNewsData ? "" : "|google"}`;
+  const { data: cached } = await db.from("local_news_cache").select("articles, fetched_at").eq("area_key", areaKey).maybeSingle();
+  if (cached && Date.now() - new Date(cached.fetched_at).getTime() < CACHE_HOURS * 3600 * 1000) {
+    return cached.articles as Article[];
+  }
+
+  const [nd, gn] = await Promise.all([
+    withNewsData && apiKey ? newsDataNews(apiKey, place, state).catch(() => []) : Promise.resolve([]),
+    googleNews(place, state).catch(() => []),
+  ]);
+  const articles = [...nd, ...gn].map((a) => ({ ...a, place }));
+  if (!articles.length) return (cached?.articles as Article[]) ?? [];
+
+  await db.from("local_news_cache").upsert({
+    area_key: areaKey, city: place, state, articles, fetched_at: new Date().toISOString(),
+  });
+  return articles;
+}
+
+function normalizedTitle(t: string): string {
+  return t.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+}
+
+const newestFirst = (x: Article, y: Article) => (y.published ?? "").localeCompare(x.published ?? "");
+
+// Merge places fairly: each place gets an equal share of the list first,
+// then any spare room goes to the newest leftovers. Duplicates are dropped.
+function mergeArticles(lists: Article[][]): Article[] {
+  const seen = new Set<string>();
+  const perPlace = lists.map((list) => {
+    const unique: Article[] = [];
+    for (const a of [...list].sort(newestFirst)) {
+      const key = normalizedTitle(a.title);
+      if (!key || seen.has(key) || seen.has(a.link)) continue;
+      seen.add(key); seen.add(a.link);
+      unique.push(a);
+    }
+    return unique;
+  });
+  const share = Math.ceil(MAX_RESULTS / Math.max(1, perPlace.length));
+  const picked = perPlace.flatMap((list) => list.slice(0, share));
+  const spare = perPlace.flatMap((list) => list.slice(share)).sort(newestFirst);
+  return [...picked, ...spare].slice(0, MAX_RESULTS).sort(newestFirst);
 }
 
 // Optional IP allowlist: set the secret ALLOWED_IPS to comma-separated addresses
@@ -180,34 +271,23 @@ Deno.serve(async (req) => {
   if (!place) return reply(404, { error: `We don't have location details for ZIP ${zip}` }, origin);
 
   const location = { zip: place.zip, zcta: place.zcta, city: place.city, state: place.state };
-  const areaKey = `${place.city.toLowerCase()}|${place.state}`;
 
-  // Fresh cache?
-  const { data: cached } = await db.from("local_news_cache").select("articles, fetched_at").eq("area_key", areaKey).maybeSingle();
-  const fresh = cached && (Date.now() - new Date(cached.fetched_at).getTime()) < CACHE_HOURS * 3600 * 1000;
-  if (fresh) return reply(200, { location, articles: cached.articles, cached: true, fetched_at: cached.fetched_at }, origin);
+  // Nearby places from the profile (only when using the profile's own ZIP).
+  let nearby: string[] = [];
+  if (!requested) {
+    const { data: prof } = await db.from("profiles").select("nearby_places").eq("id", auth.user.id).maybeSingle();
+    nearby = (prof?.nearby_places ?? [])
+      .map((p: string) => p.trim())
+      .filter((p: string) => p && p.toLowerCase() !== place.city.toLowerCase())
+      .slice(0, 5);
+  }
 
   const apiKey = Deno.env.get("NEWSDATA_API_KEY");
-  if (!apiKey) {
-    if (cached) return reply(200, { location, articles: cached.articles, cached: true, stale: true, fetched_at: cached.fetched_at }, origin);
-    return reply(503, { error: "Local news isn't set up yet" }, origin);
-  }
+  const lists = await Promise.all([
+    placeNews(db, place.city, place.state, true, apiKey),
+    ...nearby.map((p) => placeNews(db, p, place.state, false, apiKey)),
+  ]);
+  const articles = mergeArticles(lists);
 
-  let articles: Article[] = [];
-  try {
-    articles = await fetchNews(apiKey, place.city, place.state);
-  } catch {
-    articles = [];
-  }
-
-  if (!articles.length && cached) {
-    return reply(200, { location, articles: cached.articles, cached: true, stale: true, fetched_at: cached.fetched_at }, origin);
-  }
-
-  const fetchedAt = new Date().toISOString();
-  await db.from("local_news_cache").upsert({
-    area_key: areaKey, city: place.city, state: place.state, articles, fetched_at: fetchedAt,
-  });
-
-  return reply(200, { location, articles, cached: false, fetched_at: fetchedAt }, origin);
+  return reply(200, { location, places: [place.city, ...nearby], articles }, origin);
 });

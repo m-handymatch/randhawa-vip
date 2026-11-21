@@ -94,14 +94,24 @@
           <h1 id="greeting">Hi there</h1>
           <p class="place" id="place"></p>
         </div>
-        <form class="zip-form" id="zip-form" novalidate>
-          <label for="zip-change">Change ZIP</label>
-          <div class="zip-row">
-            <input id="zip-change" name="zip" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" required aria-describedby="zip-change-hint">
-            <button class="btn btn-quiet btn-small" type="submit">Update</button>
-          </div>
-          <span class="hint" id="zip-change-hint" aria-live="polite"></span>
-        </form>
+        <div class="settings">
+          <form class="zip-form" id="zip-form" novalidate>
+            <label for="zip-change">Change ZIP</label>
+            <div class="zip-row">
+              <input id="zip-change" name="zip" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" required aria-describedby="zip-change-hint">
+              <button class="btn btn-quiet btn-small" type="submit">Update</button>
+            </div>
+            <span class="hint" id="zip-change-hint" aria-live="polite"></span>
+          </form>
+          <form class="zip-form" id="places-form" novalidate>
+            <label for="places-input">Nearby places</label>
+            <div class="zip-row">
+              <input id="places-input" name="places" maxlength="320" placeholder="e.g. Oakland, Daly City" aria-describedby="places-hint">
+              <button class="btn btn-quiet btn-small" type="submit">Save</button>
+            </div>
+            <span class="hint" id="places-hint" aria-live="polite">Up to 5, separated by commas. We'll add their news too.</span>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -121,7 +131,7 @@
 
 <footer class="foot">
   <div class="wrap">
-    <p>randhawa.vip connects neighbors. News comes from publishers via NewsData.io and links to the original stories.</p>
+    <p>randhawa.vip connects neighbors. Headlines come from publishers via NewsData.io and Google News, and link to the original stories.</p>
   </div>
 </footer>
 

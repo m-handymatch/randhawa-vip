@@ -80,3 +80,19 @@ alter table public.local_news_cache enable row level security;
 grant select, insert, update, delete on public.local_news_cache to service_role;
 
 create extension if not exists pg_net with schema extensions;
+
+-- 4. Nearby places: up to 5 extra places a user wants news about
+create or replace function private.valid_places(p text[]) returns boolean
+language sql immutable set search_path = public
+as $$
+  select cardinality(p) <= 5
+     and not exists (select 1 from unnest(p) x where length(x) > 60 or length(trim(x)) = 0 or x ~ '[<>"]')
+$$;
+alter table public.profiles
+  add column nearby_places text[] not null default '{}'
+  constraint nearby_places_valid check (private.valid_places(nearby_places));
+grant update (nearby_places) on public.profiles to authenticated;
+-- The check runs as the signed-in user, so they need to reach this one function.
+grant usage on schema private to authenticated;
+revoke all on function private.valid_places(text[]) from public, anon;
+grant execute on function private.valid_places(text[]) to authenticated;

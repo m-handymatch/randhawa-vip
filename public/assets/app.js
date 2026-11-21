@@ -5,7 +5,7 @@
   var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { user: null, profile: null };
+  var state = { user: null, profile: null, places: [] };
 
   // ---------- The street ----------
   var HOUSES = [
@@ -192,6 +192,12 @@
       var li = document.createElement('li');
       li.className = 'story' + (a.image ? '' : ' no-image');
       var text = document.createElement('div');
+      if (a.place && state.places.length > 1) {
+        var tag = document.createElement('span');
+        tag.className = 'tag' + (a.place === state.places[0] ? ' home' : '');
+        tag.textContent = a.place;
+        text.appendChild(tag);
+      }
       var h3 = document.createElement('h3');
       var link = document.createElement('a');
       link.href = a.link; link.target = '_blank'; link.rel = 'noopener noreferrer';
@@ -237,6 +243,10 @@
         return;
       }
       var articles = (r.data && r.data.articles) || [];
+      state.places = (r.data && r.data.places) || [];
+      $('news-note').textContent = (state.places.length > 1
+        ? 'Headlines about ' + listJoin(state.places) + '.'
+        : 'Headlines from local and regional news.') + ' Tap one to read it on the publisher\u2019s site.';
       if (!articles.length) {
         emptyState(['No local headlines yet for your area.', 'Smaller towns get fewer stories. Check back later today.']);
         return;
@@ -246,8 +256,12 @@
   }
 
   function loadProfile() {
-    return db.from('profiles').select('display_name, zip').eq('id', state.user.id).maybeSingle()
-      .then(function (r) { state.profile = r.data || { display_name: null, zip: null }; });
+    return db.from('profiles').select('display_name, zip, nearby_places').eq('id', state.user.id).maybeSingle()
+      .then(function (r) {
+        state.profile = r.data || { display_name: null, zip: null, nearby_places: [] };
+        state.profile.nearby_places = state.profile.nearby_places || [];
+        $('places-input').value = state.profile.nearby_places.join(', ');
+      });
   }
 
   wireZipHint($('zip-form').zip, $('zip-change-hint'));
@@ -267,6 +281,34 @@
       return renderPlace().then(loadNews);
     }).catch(function (err) {
       hint.textContent = (err && err.message) || 'Couldn’t update your ZIP. Try again.'; hint.className = 'hint bad';
+    }).finally(function () { btn.disabled = false; });
+  });
+
+  function listJoin(items) {
+    if (items.length < 2) return items.join('');
+    return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
+  }
+
+  $('places-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, hint = $('places-hint'), btn = f.querySelector('button');
+    var places = f.places.value.split(',')
+      .map(function (p) { return p.replace(/\s+/g, ' ').trim(); })
+      .filter(function (p, i, all) { return p && all.findIndex(function (q) { return q.toLowerCase() === p.toLowerCase(); }) === i; });
+    if (places.length > 5) { hint.textContent = 'Pick up to 5 places.'; hint.className = 'hint bad'; return; }
+    if (places.some(function (p) { return p.length > 60 || /[<>"]/.test(p); })) {
+      hint.textContent = 'Keep each place under 60 characters, letters and spaces only.'; hint.className = 'hint bad'; return;
+    }
+    btn.disabled = true;
+    db.from('profiles').update({ nearby_places: places }).eq('id', state.user.id).then(function (r) {
+      if (r.error) throw r.error;
+      state.profile.nearby_places = places;
+      f.places.value = places.join(', ');
+      hint.textContent = places.length ? 'Saved. Loading news for ' + listJoin(places) + '\u2026' : 'Saved.';
+      hint.className = 'hint ok';
+      loadNews();
+    }).catch(function () {
+      hint.textContent = 'Couldn\u2019t save your places. Try again.'; hint.className = 'hint bad';
     }).finally(function () { btn.disabled = false; });
   });
 
