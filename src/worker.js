@@ -77,6 +77,14 @@ export default {
       url.hostname = 'randhawa.vip';
       return Response.redirect(url.toString(), 301);
     }
-    return env.ASSETS.fetch(request);
+    const res = await env.ASSETS.fetch(request);
+    // Pages always check for a newer version, so updates show on a normal refresh.
+    // (style.css and app.js carry a ?v= tag in index.html for the same reason.)
+    if ((res.headers.get('content-type') || '').includes('text/html')) {
+      const fresh = new Response(res.body, res);
+      fresh.headers.set('cache-control', 'no-cache');
+      return fresh;
+    }
+    return res;
   },
 };
