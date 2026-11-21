@@ -373,9 +373,9 @@
       }
       var articles = (r.data && r.data.articles) || [];
       state.places = (r.data && r.data.places) || [];
-      $('news-note').textContent = (state.places.length > 1
-        ? 'Headlines about ' + listJoin(state.places) + '.'
-        : 'Headlines from local and regional news.') + ' Tap one to read it on the publisher\u2019s site.';
+      $('news-note').textContent = state.places.length > 1
+        ? 'From ' + listJoin(state.places) + '.'
+        : 'Headlines from local and regional news.';
       if (!articles.length) {
         emptyState(['No local headlines yet for your area.', 'Smaller towns get fewer stories. Check back later today.']);
         return;
