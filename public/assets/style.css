@@ -627,3 +627,6 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
   .signed-in .zip-form input { width: 110px; }
   .signed-in #zip-form > label { width: 110px; }
 }
+
+/* Box subtitles stay on one line so the three boxes line up; hover shows the full text */
+.panel-head .note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

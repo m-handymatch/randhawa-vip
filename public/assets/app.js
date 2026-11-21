@@ -374,6 +374,7 @@
       $('news-note').textContent = state.places.length > 1
         ? 'From ' + listJoin(state.places) + '.'
         : 'Headlines from local and regional news.';
+      $('news-note').title = $('news-note').textContent;
       if (!articles.length) {
         emptyState(['No local headlines yet for your area.', 'Smaller towns get fewer stories. Check back later today.']);
         return;
@@ -651,6 +652,9 @@
       $('events-loading').hidden = true;
       if (r.error) { eventsEmpty(['We couldn’t load events right now.', 'Try again in a few minutes.']); return; }
       var events = (r.data && r.data.events) || [];
+      var evPlaces = (r.data && r.data.places) || [];
+      $('events-note').textContent = evPlaces.length ? 'From ' + listJoin(evPlaces) + '.' : 'Around you and your nearby cities.';
+      $('events-note').title = $('events-note').textContent;
       if (r.data && r.data.configured === false) { eventsEmpty(['Events are almost ready.', 'The events service still needs its key.']); return; }
       if (!events.length) { eventsEmpty(['No upcoming events found nearby yet.', 'Check back tomorrow.']); return; }
       renderEvents(events);
