@@ -43,19 +43,19 @@ const { location, articles } = await res.json();
 - Signed out: sign up (first name, ZIP, email, password) or sign in. The ZIP is checked as you type and shows the city.
 - Signed in: a street of houses with yours lit up and your ZIP on the mailbox, a greeting, your neighborhood, a box to change your ZIP, and local headlines that link to the original stories.
 
-### Publish it (Cloudflare Pages, recommended)
+### Publish it (Cloudflare Workers)
 
-Workers & Pages → Create → Pages → Import an existing Git repository → `m-handymatch/randhawa-vip`, framework None, build command empty, output directory `/`. Add the variable `ALLOWED_IPS`, then Custom domains → `randhawa.vip`.
+The site lives in `public/`; `src/worker.js` runs first on every request and lets in only the IPs in the variable `ALLOWED_IPS` (comma-separated). Empty = everyone blocked. `wrangler.jsonc` ties them together.
 
-### Or publish with GitHub Pages
-
-1. Repo **Settings → Pages** → Deploy from a branch → `main`, `/ (root)` → Save.
-2. Site appears at `https://m-handymatch.github.io/randhawa-vip/`.
-3. In Supabase (zip-zcta project) → **Authentication → URL Configuration**: set **Site URL** to the site's address and add it under **Redirect URLs**, so the confirmation email link brings people back to the site.
+1. Cloudflare → **Workers & Pages → Create application → Import a repository** → `m-handymatch/randhawa-vip`.
+2. Build command: leave empty. Deploy command: `npx wrangler deploy`. Deploy.
+3. **Settings → Variables and Secrets** → add `ALLOWED_IPS` (type Text) → Deploy.
+4. **Settings → Domains & Routes → Add → Custom domain** → `randhawa.vip`.
+5. Supabase (zip-zcta) → **Authentication → URL Configuration**: Site URL `https://randhawa.vip`, Redirect URL `https://randhawa.vip/**`.
 
 ### Private: only your IP (Cloudflare)
 
-- Website: `functions/_middleware.js` lets in only the IPs in the Cloudflare Pages variable `ALLOWED_IPS` (comma-separated). Empty = everyone blocked. Covers randhawa.vip and the *.pages.dev address.
+- Website: `src/worker.js` lets in only the IPs in the Worker variable `ALLOWED_IPS`. Covers randhawa.vip and the *.workers.dev address.
 - Optional extra layer: Cloudflare **Security → Security rules → Create rule → Custom rules**, block when `not ip.src in {YOUR.IP}`.
 - News function: Supabase secret `ALLOWED_IPS` (comma-separated). Unset = open to everyone.
 
@@ -63,7 +63,8 @@ To use the randhawa.vip domain later: add it under Settings → Pages → Custom
 
 ## Files
 
-- `index.html`, `assets/`: the website
+- `public/`: the website (`index.html`, `assets/`)
+- `src/worker.js`, `wrangler.jsonc`: Cloudflare Worker that serves the site behind the IP gate
 - `supabase/schema.sql`: tables, security rules and sign-up trigger (already applied)
 - `supabase/functions/local-news/index.ts`: the Edge Function (already deployed)
 
