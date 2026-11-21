@@ -109,7 +109,7 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 /* Signed-in view */
 .home-head { padding: 4px 0 22px; }
 .home-head .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: start; }
-.home-head h1 { font-size: clamp(36px, 5vw, 56px); }
+.home-head h1 { font-size: clamp(28px, 3.2vw, 38px); }
 .place { margin-top: 8px; font-size: 20px; color: var(--ink-soft); }
 .place strong { color: var(--ink); }
 .zip-form { display: flex; flex-direction: column; gap: 6px; margin: 0; }
@@ -149,27 +149,27 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 }
 .tag.home { background: var(--marigold); }
 
-.about { padding: 0 0 36px; }
+.about { padding: 0 0 28px; }
 .about-card {
-  display: grid; grid-template-columns: 260px minmax(0, 1fr) 300px; gap: 24px; align-items: start;
-  background: var(--white); border: 2px solid var(--ink); border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); padding: 20px;
+  display: grid; grid-template-columns: 190px minmax(0, 1fr) 230px; gap: 20px; align-items: start;
+  background: var(--white); border: 2px solid var(--ink); border-radius: 22px; box-shadow: 4px 4px 0 var(--ink); padding: 14px 16px;
 }
-.about-card.no-photo { grid-template-columns: minmax(0, 1fr) 300px; }
-.about-card.no-map { grid-template-columns: 260px minmax(0, 1fr); }
+.about-card.no-photo { grid-template-columns: minmax(0, 1fr) 230px; }
+.about-card.no-map { grid-template-columns: 190px minmax(0, 1fr); }
 .about-card.no-photo.no-map { grid-template-columns: minmax(0, 1fr); }
 .about-photo { margin: 0; }
-.about-photo img { display: block; width: 100%; height: 200px; object-fit: cover; border-radius: 14px; border: 2px solid var(--ink); background: var(--sky); }
-.about-photo figcaption { margin-top: 6px; font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
-.about-text h2 { font-size: 28px; }
+.about-photo img { display: block; width: 100%; height: 128px; object-fit: cover; border-radius: 12px; border: 2px solid var(--ink); background: var(--sky); }
+.about-photo figcaption { margin-top: 4px; font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
+.about-text h2 { font-size: 22px; }
 .about-text #about-extract {
-  margin-top: 8px; font-size: 17px; max-width: 62ch;
+  margin-top: 6px; font-size: 15px; line-height: 1.5; max-width: 70ch;
   /* same-size card for every city: long intros are cut at 4 lines */
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
 }
-.about-links { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px 18px; font-weight: 700; font-size: 16px; }
-.about-credit { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.about-links { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-weight: 600; font-size: 14px; }
+.about-credit { margin-top: 6px; font-size: 12px; color: var(--ink-soft); }
 .about-credit a, .about-photo figcaption a { color: inherit; }
-.about-map iframe { display: block; width: 100%; height: 200px; border: 2px solid var(--ink); border-radius: 14px; background: var(--sky); }
+.about-map iframe { display: block; width: 100%; height: 128px; border: 2px solid var(--ink); border-radius: 14px; background: var(--sky); }
 .about-map .about-credit { margin-top: 6px; }
 .about-map .about-credit a { white-space: nowrap; }
 .news { background: var(--white); border-top: 2px solid var(--ink); padding: 40px 0 72px; }
@@ -193,10 +193,10 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 .foot .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
 @media (max-width: 980px) {
-  .about-card, .about-card.no-map { grid-template-columns: 220px minmax(0, 1fr); }
+  .about-card, .about-card.no-map { grid-template-columns: 170px minmax(0, 1fr); }
   .about-card.no-photo, .about-card.no-photo.no-map { grid-template-columns: minmax(0, 1fr); }
   .about-map { grid-column: 1 / -1; }
-  .about-map iframe { height: 240px; }
+  .about-map iframe { height: 160px; }
 }
 @media (max-width: 860px) {
   .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
@@ -206,7 +206,7 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 }
 @media (max-width: 620px) {
   .about-card, .about-card.no-map { grid-template-columns: minmax(0, 1fr); padding: 16px; }
-  .about-photo img { height: 190px; }
+  .about-photo img { height: 150px; }
 }
 @media (max-width: 520px) {
   .brand-mark { width: 64px; height: 64px; }
