@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"310396","name":"Summer Street Stroll Farmers Market","street":"1400 Main St., Great Bend, KS, 67530","city":"KS","zip":"67530","lat":38.36556,"lon":-98.76513,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-21"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"310396","name":"Summer Street Stroll Farmers Market","addr":"1400 Main St., Great Bend, KS, 67530","lat":38.36556,"lon":-98.76513,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-21"}]}

@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"312751","name":"Hyde County Farmers' Market","street":"34175 205th St., Highmore, SD, 57345","city":"SD","zip":"57345","lat":44.41198,"lon":-99.34273,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"312751","name":"Hyde County Farmers' Market","addr":"34175 205th St., Highmore, SD, 57345","lat":44.41198,"lon":-99.34273,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"312461","name":"Oakridge Oregon Farmers Market","street":"76453 Willow Street Oakridge, OR 97463","city":"","zip":"97463","lat":43.74755,"lon":-122.46519,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"312461","name":"Oakridge Oregon Farmers Market","addr":"76453 Willow Street Oakridge, OR 97463","lat":43.74755,"lon":-122.46519,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

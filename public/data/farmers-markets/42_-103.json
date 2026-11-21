@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"311623","name":"Gordon Farmers' Market","street":"304 N Main Street Gordon, NE 69343","city":"","zip":"69343","lat":42.80646,"lon":-102.20328,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"311623","name":"Gordon Farmers' Market","addr":"304 N Main Street Gordon, NE 69343","lat":42.80646,"lon":-102.20328,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

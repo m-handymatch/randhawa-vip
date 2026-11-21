@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"311761","name":"Main Street Farmers' Market","street":"608 W. Santa Fe Ave., Grants, NM, 87020","city":"NM","zip":"87020","lat":35.15285,"lon":-107.85441,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"311761","name":"Main Street Farmers' Market","addr":"608 W. Santa Fe Ave., Grants, NM, 87020","lat":35.15285,"lon":-107.85441,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

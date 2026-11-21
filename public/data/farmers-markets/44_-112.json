@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"309688","name":"Henry's Fork Farmers' Market in Ashton","street":"204 Main St., Ashton, ID, 83420","city":"ID","zip":"83420","lat":44.07106,"lon":-111.45254,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-20"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"309688","name":"Henry's Fork Farmers' Market in Ashton","addr":"204 Main St., Ashton, ID, 83420","lat":44.07106,"lon":-111.45254,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-20"}]}

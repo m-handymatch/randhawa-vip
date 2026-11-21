@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"311748","name":"Dixon Farmers' Market","street":"215 Hwy. 75, Dixon, NM, 87527","city":"NM","zip":"87527","lat":36.19771,"lon":-105.88739,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"311748","name":"Dixon Farmers' Market","addr":"215 Hwy. 75, Dixon, NM, 87527","lat":36.19771,"lon":-105.88739,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

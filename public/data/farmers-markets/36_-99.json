@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"312372","name":"Cherokee Farmers' Market","street":"121 E. Main St., Cherokee, OK, 73728","city":"OK","zip":"73728","lat":36.75778,"lon":-98.35686,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"312372","name":"Cherokee Farmers' Market","addr":"121 E. Main St., Cherokee, OK, 73728","lat":36.75778,"lon":-98.35686,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

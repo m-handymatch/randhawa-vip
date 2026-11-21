@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"311507","name":"Kure Beach Farmers Market","street":"105 Atlantic Ave., Kure Beach, NC, 28449","city":"NC","zip":"28449","lat":33.99827,"lon":-77.90584,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"311507","name":"Kure Beach Farmers Market","addr":"105 Atlantic Ave., Kure Beach, NC, 28449","lat":33.99827,"lon":-77.90584,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

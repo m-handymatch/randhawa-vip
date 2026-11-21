@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"312924","name":"Main Street Farmers' Market","street":"210 Main Street Sulphur Springs, TX 75482","city":"","zip":"75482","lat":33.13771,"lon":-95.60223,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"312924","name":"Main Street Farmers' Market","addr":"210 Main Street Sulphur Springs, TX 75482","lat":33.13771,"lon":-95.60223,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

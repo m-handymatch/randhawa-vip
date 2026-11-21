@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"311602","name":"Tappen Farmers' Market","street":"3719 1st St. NE, Tappen, ND, 58487","city":"ND","zip":"58487","lat":46.87575,"lon":-99.63737,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"311602","name":"Tappen Farmers' Market","addr":"3719 1st St. NE, Tappen, ND, 58487","lat":46.87575,"lon":-99.63737,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

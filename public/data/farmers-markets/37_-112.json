@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"313002","name":"Escalante Farmers' Market","street":"120 E. Main St., Escalante, UT, 84726","city":"UT","zip":"84726","lat":37.77028,"lon":-111.59798,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"313002","name":"Escalante Farmers' Market","addr":"120 E. Main St., Escalante, UT, 84726","lat":37.77028,"lon":-111.59798,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

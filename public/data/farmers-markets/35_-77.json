@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"311531","name":"Oriental Farmers Market","street":"310 Hodges St. Oriental, NC 28571","city":"","zip":"28571","lat":35.02494,"lon":-76.69497,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"311531","name":"Oriental Farmers Market","addr":"310 Hodges St. Oriental, NC 28571","lat":35.02494,"lon":-76.69497,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"312920","name":"Local Kerrville Farmers Market","street":"945 Barnett Street Kerrville, TX 78028","city":"","zip":"78028","lat":30.04749,"lon":-99.13334,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"312920","name":"Local Kerrville Farmers Market","addr":"945 Barnett Street Kerrville, TX 78028","lat":30.04749,"lon":-99.13334,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

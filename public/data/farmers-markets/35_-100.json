@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"312380","name":"Hobart Main Street Farmers Market","street":"106 W 4th Hobart, OK 73651","city":"","zip":"73651","lat":35.02448,"lon":-99.09334,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"312380","name":"Hobart Main Street Farmers Market","addr":"106 W 4th Hobart, OK 73651","lat":35.02448,"lon":-99.09334,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

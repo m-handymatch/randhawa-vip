@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"311419","name":"Great Falls Farmers' Market","street":"2 S. Park Dr., Great Falls, MT, 59401","city":"MT","zip":"59401","lat":47.50537,"lon":-111.30608,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"311419","name":"Great Falls Farmers' Market","addr":"2 S. Park Dr., Great Falls, MT, 59401","lat":47.50537,"lon":-111.30608,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

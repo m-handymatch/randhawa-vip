@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"309678","name":"Cambridge Farmers' Market","street":"Tower Park, Cambridge, ID, 83610","city":"ID","zip":"83610","lat":52.34942,"lon":-0.18422,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-20"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"309678","name":"Cambridge Farmers' Market","addr":"Tower Park, Cambridge, ID, 83610","lat":52.34942,"lon":-0.18422,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-20"}]}

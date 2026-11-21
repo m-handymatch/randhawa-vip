@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"310522","name":"Abbeville Farmers Market","street":"200 N. Magdalen Square St., Abbeville, LA, 70510","city":"LA","zip":"70510","lat":29.97444,"lon":-92.13668,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-21"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"310522","name":"Abbeville Farmers Market","addr":"200 N. Magdalen Square St., Abbeville, LA, 70510","lat":29.97444,"lon":-92.13668,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-21"}]}

@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"313190","name":"Red Mill Green Market","street":"2181 Upton Drive Virginia Beach, VA 23454","city":"","zip":"23454","lat":36.77128,"lon":-75.99857,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"313190","name":"Red Mill Green Market","addr":"2181 Upton Drive Virginia Beach, VA 23454","lat":36.77128,"lon":-75.99857,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

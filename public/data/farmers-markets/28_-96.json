@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"312877","name":"Downtown Farmers Market Bay City","street":"1816 7th Street Bay City, TX 77414","city":"","zip":"77414","lat":28.98303,"lon":-95.96853,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"312877","name":"Downtown Farmers Market Bay City","addr":"1816 7th Street Bay City, TX 77414","lat":28.98303,"lon":-95.96853,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}

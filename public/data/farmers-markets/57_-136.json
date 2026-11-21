@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"300092","name":"Sitka Farmers Market","street":"611 Lincoln Street","city":"Sitka","zip":"99835","lat":57.05152,"lon":-135.32674,"about":"","where":"Faith-based institution","ebt":true,"organic":true,"updated":"2020-09-10"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"300092","name":"Sitka Farmers Market","addr":"611 Lincoln Street, Sitka, Alaska 99835","lat":57.05152,"lon":-135.32674,"about":"","where":"Faith-based institution","ebt":true,"organic":true,"updated":"2020-09-10"}]}

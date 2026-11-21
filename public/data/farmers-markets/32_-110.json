@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"308466","name":"Gila Valley Farmers Market","street":"Safford AZ 85546, US","city":"","zip":"","lat":32.83001,"lon":-109.71375,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-20"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"308466","name":"Gila Valley Farmers Market","addr":"Safford AZ 85546, US","lat":32.83001,"lon":-109.71375,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-20"}]}

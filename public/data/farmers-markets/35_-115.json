@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"308476","name":"Kingman Farmers Market","street":"Kingman AZ 86401, US","city":"","zip":"","lat":35.18985,"lon":-114.05532,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-20"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"308476","name":"Kingman Farmers Market","addr":"Kingman AZ 86401, US","lat":35.18985,"lon":-114.05532,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-20"}]}

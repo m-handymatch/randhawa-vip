@@ -1,1 +1,1 @@
-{"source":"USDA National Farmers Market Directory","markets":[{"id":"313367","name":"Davenport Farmers' Market","street":"6th St. and Morgan St., Davenport, WA, 99122","city":"WA","zip":"99122","lat":47.65405,"lon":-118.14977,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
+{"source":"USDA National Farmers Market Directory","markets":[{"id":"313367","name":"Davenport Farmers' Market","addr":"6th St. and Morgan St., Davenport, WA, 99122","lat":47.65405,"lon":-118.14977,"about":"","where":"","ebt":false,"organic":false,"updated":"2023-03-27"}]}
