@@ -19,7 +19,7 @@ print("columns:", cols)
 rows = con.execute("""
   SELECT id,
          names.primary AS name,
-         categories.primary AS category,
+         """ + ("basic_category" if "basic_category" in cols else "categories.primary") + """ AS category,
          addresses[1].freeform AS street,
          addresses[1].locality AS city,
          addresses[1].region AS state,
