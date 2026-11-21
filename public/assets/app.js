@@ -324,12 +324,6 @@
       var li = document.createElement('li');
       li.className = 'story' + (a.image ? '' : ' no-image');
       var text = document.createElement('div');
-      if (a.place && state.places.length > 1) {
-        var tag = document.createElement('span');
-        tag.className = 'tag' + (a.place === state.places[0] ? ' home' : '');
-        tag.textContent = a.place;
-        text.appendChild(tag);
-      }
       var h3 = document.createElement('h3');
       var link = document.createElement('a');
       link.href = a.link; link.target = '_blank'; link.rel = 'noopener noreferrer';
