@@ -220,8 +220,8 @@
       if (i >= titles.length) return Promise.resolve(null);
       return getJSON('https://en.wikipedia.org/w/api.php?' + qs({
         action: 'query', format: 'json', formatversion: 2, origin: '*', redirects: 1, titles: titles[i],
-        prop: 'extracts|pageimages|pageprops|info', exintro: 1, explaintext: 1, exsentences: 2,
-        piprop: 'name', pilicense: 'free', ppprop: 'wikibase_item|disambiguation', inprop: 'url'
+        prop: 'extracts|pageimages|pageprops|info|images', exintro: 1, explaintext: 1, exsentences: 6,
+        piprop: 'name', pilicense: 'free', ppprop: 'wikibase_item|disambiguation', inprop: 'url', imlimit: 60
       })).then(function (r) {
         var pg = r && r.query && r.query.pages && r.query.pages[0];
         var ok = pg && !pg.missing && !(pg.pageprops && 'disambiguation' in pg.pageprops) && pg.extract
@@ -233,12 +233,65 @@
     return tryTitle(0);
   }
 
+  // Pick the nicest city photo from the article: wide views of the city itself
+  // (aerial, skyline, downtown, landmarks) beat buildings, maps, seals and logos.
+  var PHOTO_SKIP = /\.(svg|png|gif|tiff?)$|\b(map|maps|logo|flag|seal|icon|coat of arms|locator|location|usgs|diagram|chart|graph|signature|census|condemned|vacant|barracks|portrait|headshot)\b/i;
+  var PHOTO_GOOD = /\b(skyline|aerial|from the air|overview|panorama|view|vista|downtown|main street|city hall|plaza|waterfront|harbou?r|beach|bay|hills?|sunset|blossoms?|park)\b/i;
+  function photoScore(file, city, lead) {
+    var name = file.replace(/^File:/, '').replace(/_/g, ' ');
+    if (PHOTO_SKIP.test(name)) return -1;
+    var n = name.toLowerCase(), score = 0;
+    if (n.indexOf(city.toLowerCase()) !== -1) score += 2;
+    if (PHOTO_GOOD.test(name)) score += 3;
+    if (/street|avenue|square/i.test(name)) score += 1;
+    if (lead && name === lead.replace(/_/g, ' ')) score += 1;
+    return score;
+  }
+  function bestCityPhoto(pg, city) {
+    var lead = pg.pageimage || '';
+    var files = (pg.images || []).map(function (i) { return i.title; });
+    if (lead && files.indexOf('File:' + lead.replace(/_/g, ' ')) === -1) files.push('File:' + lead.replace(/_/g, ' '));
+    var ranked = files.map(function (f) { return { f: f, s: photoScore(f, city, lead) }; })
+      .filter(function (x) { return x.s >= 0; })
+      .sort(function (a, b) { return b.s - a.s; }).slice(0, 8);
+    if (!ranked.length) return commonsPhoto(lead);
+    return getJSON('https://commons.wikimedia.org/w/api.php?' + qs({
+      action: 'query', format: 'json', formatversion: 2, origin: '*',
+      titles: ranked.map(function (x) { return x.f; }).join('|'),
+      prop: 'imageinfo', iiprop: 'url|extmetadata|size', iiurlwidth: 900
+    })).then(function (r) {
+      var pages = (r && r.query && r.query.pages) || [];
+      var byTitle = {};
+      pages.forEach(function (p) { byTitle[p.title] = p; });
+      for (var i = 0; i < ranked.length; i++) {
+        var p = byTitle[ranked[i].f.replace(/_/g, ' ')];
+        var info = p && p.imageinfo && p.imageinfo[0];
+        if (!info || !info.width || info.width < 800 || info.width < info.height * 1.2) continue; // wide, sharp photos only
+        var photo = photoFromInfo(info);
+        if (photo) return photo;
+      }
+      return commonsPhoto(lead);
+    }).catch(function () { return commonsPhoto(lead); });
+  }
+  function photoFromInfo(info) {
+    var m = info.extmetadata || {};
+    var license = plainText(m.LicenseShortName && m.LicenseShortName.value);
+    var free = /^(cc[ -]?by|cc0|public domain|pd\b|gfdl)/i.test(license) && !/\bnc\b|\bnd\b|non-?free|fair use/i.test(license);
+    if (!free || !safeUrl(info.thumburl)) return null;
+    return {
+      src: info.thumburl, page: safeUrl(info.descriptionurl), license: license,
+      licenseUrl: safeUrl(m.LicenseUrl && m.LicenseUrl.value),
+      artist: plainText(m.Artist && m.Artist.value).slice(0, 80),
+      alt: plainText(m.ImageDescription && m.ImageDescription.value).slice(0, 160)
+    };
+  }
+
   // Only freely licensed Commons files, with the photographer and license we must show.
   function commonsPhoto(fileName) {
     if (!fileName) return Promise.resolve(null);
     return getJSON('https://commons.wikimedia.org/w/api.php?' + qs({
       action: 'query', format: 'json', formatversion: 2, origin: '*', titles: 'File:' + fileName,
-      prop: 'imageinfo', iiprop: 'url|extmetadata', iiurlwidth: 640
+      prop: 'imageinfo', iiprop: 'url|extmetadata', iiurlwidth: 900
     })).then(function (r) {
       var pg = r && r.query && r.query.pages && r.query.pages[0];
       var info = pg && pg.imageinfo && pg.imageinfo[0];
@@ -300,13 +353,14 @@
       $('about-wiki-credit').href = wikiUrl;
       $('about-text-credit').hidden = false;
       var links = $('about-links'); links.innerHTML = '';
-      links.appendChild(link(wikiUrl, 'Read more on Wikipedia'));
-      return Promise.all([commonsPhoto(pg.pageimage), officialSite(pg.pageprops && pg.pageprops.wikibase_item)]).then(function (res) {
+      links.appendChild(link(wikiUrl, 'More on Wikipedia'));
+      return Promise.all([bestCityPhoto(pg, city), officialSite(pg.pageprops && pg.pageprops.wikibase_item)]).then(function (res) {
         if (token !== aboutToken) return;
         var photo = res[0], site = res[1];
         if (site) {
-          var host = site.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/.*$/, '');
-          links.appendChild(link(site, 'City website (' + host + ')'));
+          var cityLink = link(site, 'City website');
+          cityLink.title = site.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/.*$/, '');
+          links.appendChild(cityLink);
         }
         renderCounty(pg.pageprops && pg.pageprops.wikibase_item, token);
         if (!photo) { $('about-photo').hidden = true; card.classList.add('no-photo'); return; }
@@ -485,11 +539,12 @@
       return (seatId ? wdEntities([seatId], 'labels') : Promise.resolve({})).then(function (se) {
         if (token !== aboutToken) return;
         var seat = seatId && se[seatId] && se[seatId].labels && se[seatId].labels.en ? se[seatId].labels.en.value : null;
-        var strong = document.createElement('strong'); strong.textContent = name;
-        box.append(strong);
-        if (seat) box.append(' · County seat: ' + seat);
-        if (site) { box.append(' · '); box.appendChild(link(site, 'County website')); }
-        box.hidden = false;
+        // Joins the links row: "Marin County (seat: San Rafael)" and its website.
+        var links = $('about-links');
+        var c = document.createElement('span'); c.className = 'about-county-name';
+        c.textContent = name + (seat ? ' (seat: ' + seat + ')' : '');
+        links.appendChild(c);
+        if (site) links.appendChild(link(site, 'County website'));
       });
     }).catch(function () {});
   }

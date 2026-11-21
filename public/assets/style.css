@@ -759,3 +759,13 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 .hp-links a:hover { background: var(--sky); border-color: var(--teal); }
 .hp-links a:focus-visible { outline: 3px solid var(--marigold); outline-offset: 2px; }
 .hp-links img { width: 24px; height: 24px; display: block; }
+
+/* ---------- City card: more about the city, smaller links, bigger photo ---------- */
+.about-card { grid-template-columns: 240px minmax(0, 1fr) 230px; }
+.about-card.no-photo { grid-template-columns: minmax(0, 1fr) 230px; }
+.about-photo img { height: 160px; }
+.about-text #about-extract { -webkit-line-clamp: 5; line-clamp: 5; font-size: 14.5px; line-height: 1.5; max-width: 78ch; }
+.about-links { margin-top: 6px; gap: 4px 14px; font-size: 13px; font-weight: 600; align-items: baseline; }
+.about-county-name { font-weight: 500; color: var(--ink-soft); }
+.about-credit { margin-top: 4px; font-size: 11px; }
+.about-photo figcaption { font-size: 11px; }
