@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20261121g">
+  <link rel="stylesheet" href="assets/style.css?v=20261121h">
   <link rel="icon" href="assets/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
@@ -142,7 +142,6 @@
           </div>
         </article>
         <div class="today" id="today" hidden>
-          <div class="alert-banner" id="wx-alerts" role="status" hidden></div>
           <div class="today-grid">
             <a class="tile" id="wx-tile" href="#" target="_blank" rel="noopener">
               <span class="tile-label"><span class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.5"/><path d="M9 2.5v1.5M2.5 9H4M4.4 4.4l1 1M13.6 4.4l-1 1"/><path d="M8 19h9a3.5 3.5 0 0 0 0-7 4.5 4.5 0 0 0-8.6 1.6A2.7 2.7 0 0 0 8 19z"/></svg></span>Weather</span>
@@ -154,13 +153,13 @@
               <span class="tile-main"><span class="aqi-dot" id="aqi-dot"></span><span id="aqi-main">…</span></span>
               <span class="tile-sub" id="aqi-sub"></span>
             </a>
-            <a class="tile" id="quake-tile" href="https://earthquake.usgs.gov/earthquakes/map/" target="_blank" rel="noopener">
-              <span class="tile-label"><span class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h4l2-5 3 10 3-8 2 3h6"/></svg></span>Earthquakes</span>
-              <span class="tile-main" id="quake-main">…</span>
-              <span class="tile-sub" id="quake-sub"></span>
+<a class="tile alert-tile" id="alert-tile" href="#" target="_blank" rel="noopener" aria-live="polite">
+              <span class="tile-label"><span class="tile-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5M12 17.2v.3"/></svg></span>Weather alerts</span>
+              <span class="tile-main" id="alert-main">…</span>
+              <span class="tile-sub" id="alert-sub"></span>
             </a>
           </div>
-          <p class="about-credit">Weather and alerts: National Weather Service. Air quality: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>. Earthquakes: U.S. Geological Survey.</p>
+          <p class="about-credit">Weather and alerts: National Weather Service. Air quality: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>.</p>
         </div>
       </div>
     </div>
@@ -222,11 +221,11 @@
 
 <footer class="foot">
   <div class="wrap">
-    <p>randhawa.vip connects neighbors. Headlines come from publishers via NewsData.io and Google News, and link to the original stories. Events are found with Google via SerpApi and link to their organizers. City facts and photos come from Wikipedia and Wikimedia Commons; maps from OpenStreetMap; weather and alerts from the National Weather Service; earthquakes from USGS; home values from Zillow Research.</p>
+    <p>randhawa.vip connects neighbors. Headlines come from publishers via NewsData.io and Google News, and link to the original stories. Events are found with Google via SerpApi and link to their organizers. City facts and photos come from Wikipedia and Wikimedia Commons; maps from OpenStreetMap; weather and alerts from the National Weather Service; home values from Zillow Research.</p>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="assets/app.js?v=20261121g"></script>
+<script src="assets/app.js?v=20261121h"></script>
 </body>
 </html>

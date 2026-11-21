@@ -464,7 +464,7 @@
     }).catch(function () {});
   }
 
-  // ---------- Today: weather + alerts (NWS), air quality (Open-Meteo), earthquakes (USGS) ----------
+  // ---------- Today: weather + alerts (NWS), air quality (Open-Meteo) ----------
   function aqiCategory(v) {
     if (v <= 50) return ['Good', '#23A866'];
     if (v <= 100) return ['Moderate', '#E8B90C'];
@@ -487,9 +487,8 @@
     var pt = lat.toFixed(4) + ',' + lon.toFixed(4);
     $('today').hidden = false;
     $('wx-tile').href = 'https://forecast.weather.gov/MapClick.php?lat=' + lat.toFixed(4) + '&lon=' + lon.toFixed(4);
-    ['wx-main', 'aqi-main', 'quake-main'].forEach(function (id) { $(id).textContent = '…'; });
-    ['wx-sub', 'aqi-sub', 'quake-sub'].forEach(function (id) { $(id).textContent = ''; });
-    $('wx-alerts').hidden = true;
+    ['wx-main', 'aqi-main', 'alert-main'].forEach(function (id) { $(id).textContent = '…'; });
+    ['wx-sub', 'aqi-sub', 'alert-sub'].forEach(function (id) { $(id).textContent = ''; });
 
     getJSON('https://api.weather.gov/points/' + pt).then(function (p) {
       return getJSON(p.properties.forecast);
@@ -501,43 +500,30 @@
       $('wx-sub').textContent = ps[0].name + (ps[1] ? ' · ' + ps[1].name + ' ' + ps[1].temperature + '°' : '');
     }).catch(function () { if (token === aboutToken) $('wx-main').textContent = 'Forecast unavailable'; });
 
+    var at = $('alert-tile'); at.href = $('wx-tile').href; at.className = 'tile alert-tile';
     getJSON('https://api.weather.gov/alerts/active?point=' + pt).then(function (r) {
       if (token !== aboutToken) return;
-      var box = $('wx-alerts'); box.innerHTML = ''; box.className = 'alert-banner';
       var seen = {};
       var feats = (r.features || []).map(function (ft) { return ft.properties || {}; }).filter(function (pr) {
         var k = pr.event || ''; if (!k || seen[k]) return false; seen[k] = true; return true;
       });
-      if (!feats.length) return;
+      if (!feats.length) {
+        at.classList.add('is-clear');
+        $('alert-main').textContent = 'No active alerts';
+        $('alert-sub').textContent = 'National Weather Service';
+        at.title = '';
+        return;
+      }
       // Most serious first: warnings, then watches, then advisories and statements.
       function level(ev) { return /warning/i.test(ev) ? 'warning' : /watch/i.test(ev) ? 'watch' : 'advisory'; }
       var rank = { warning: 0, watch: 1, advisory: 2 };
       feats.sort(function (x, y) { return rank[level(x.event)] - rank[level(y.event)]; });
-      var top = level(feats[0].event);
-      box.classList.add('is-' + top);
-
-      var icon = document.createElement('span'); icon.className = 'alert-icon'; icon.setAttribute('aria-hidden', 'true');
-      icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>';
-      var main = document.createElement('div'); main.className = 'alert-main';
-      var title = document.createElement('p'); title.className = 'alert-title';
-      title.textContent = feats.length === 1 ? 'Weather alert for your area' : feats.length + ' weather alerts for your area';
-      var chips = document.createElement('ul'); chips.className = 'alert-chips';
-      feats.slice(0, 4).forEach(function (pr) {
-        var li = document.createElement('li'); li.className = 'alert-chip ' + level(pr.event);
-        var ev = document.createElement('strong'); ev.textContent = pr.event;
-        li.appendChild(ev);
-        var until = untilText(pr.ends || pr.expires);
-        if (until) { var u = document.createElement('span'); u.textContent = until.replace(/^ until /, 'until '); li.appendChild(u); }
-        if (pr.headline) li.title = pr.headline;
-        chips.appendChild(li);
-      });
-      main.append(title, chips);
-      var more = link($('wx-tile').href, 'Details');
-      more.className = 'alert-more';
-      more.setAttribute('aria-label', 'Alert details from the National Weather Service');
-      box.append(icon, main, more);
-      box.hidden = false;
-    }).catch(function () {});
+      at.classList.add('is-' + level(feats[0].event));
+      $('alert-main').textContent = feats[0].event;
+      var until = untilText(feats[0].ends || feats[0].expires).replace(/^ until /, 'Until ');
+      $('alert-sub').textContent = [until, feats.length > 1 ? '+' + (feats.length - 1) + ' more' : ''].filter(Boolean).join(' · ');
+      at.title = feats.map(function (pr) { return pr.event + untilText(pr.ends || pr.expires); }).join('\n');
+    }).catch(function () { if (token === aboutToken) $('alert-main').textContent = 'Unavailable'; });
 
     getJSON('https://air-quality-api.open-meteo.com/v1/air-quality?' + qs({ latitude: lat.toFixed(3), longitude: lon.toFixed(3), current: 'us_aqi', timezone: 'auto' })).then(function (r) {
       if (token !== aboutToken) return;
@@ -549,17 +535,6 @@
       $('aqi-sub').textContent = cat[0];
     }).catch(function () { if (token === aboutToken) { $('aqi-main').textContent = 'Unavailable'; $('aqi-dot').style.background = 'transparent'; } });
 
-    var since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-    getJSON('https://earthquake.usgs.gov/fdsnws/event/1/query?' + qs({ format: 'geojson', latitude: lat.toFixed(4), longitude: lon.toFixed(4), maxradiuskm: 100, minmagnitude: 2.5, starttime: since, orderby: 'time', limit: 20 })).then(function (r) {
-      if (token !== aboutToken) return;
-      var q = r.features || [];
-      $('quake-tile').href = 'https://earthquake.usgs.gov/earthquakes/map/';
-      if (!q.length) { $('quake-main').textContent = 'None this week'; $('quake-sub').textContent = 'M2.5+ within 60 miles'; return; }
-      var top = q[0].properties;
-      $('quake-main').textContent = 'M' + Number(top.mag).toFixed(1) + ' · ' + ago(top.time);
-      $('quake-sub').textContent = (top.place || '') + (q.length > 1 ? ' · ' + q.length + ' this week' : '');
-      if (safeUrl(top.url)) $('quake-tile').href = top.url;
-    }).catch(function () { if (token === aboutToken) $('quake-main').textContent = 'Unavailable'; });
   }
 
   // ---------- Home values (Zillow Research ZHVI, refreshed monthly into data/home-values/) ----------

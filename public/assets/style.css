@@ -216,10 +216,6 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 .about-county { margin-top: 8px; font-size: 14px; }
 .about-county a { color: inherit; }
 .today { margin-top: 16px; }
-.alert-banner {
-  margin-bottom: 12px; padding: 10px 14px; border: 2px solid var(--ink); border-radius: 14px; background: #FFE9A8;
-  font-size: 15px; display: flex; flex-direction: column; gap: 4px;
-}
 .today-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .tile {
   display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; text-decoration: none; color: var(--ink);
@@ -419,35 +415,26 @@ input:focus { box-shadow: 0 0 0 3px #BFE3C9; border-color: var(--forest); }
 .tile-icon svg, .panel-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 #wx-tile .tile-icon { color: #B7791F; background: #FBF0D9; }
 #aqi-tile .tile-icon { color: var(--forest); }
-#quake-tile .tile-icon { color: #9B3D2E; background: #F8E3DE; }
+#alert-tile .tile-icon { color: #8A5A0B; background: #FBF0D9; }
+#alert-tile.is-warning { background: #FDECE8; border-color: #F1C2B8; }
+#alert-tile.is-warning .tile-icon { color: #fff; background: #C2412D; }
+#alert-tile.is-warning .tile-main { color: #9E2F1E; }
+#alert-tile.is-watch { background: #FEF1E6; border-color: #F2C9A6; }
+#alert-tile.is-watch .tile-icon { color: #fff; background: #DD6B20; }
+#alert-tile.is-advisory { background: #FFF7E3; border-color: #EFD9A3; }
+#alert-tile.is-advisory .tile-icon { color: #fff; background: #D99A1E; }
+#alert-tile.is-clear .tile-icon { color: var(--forest); background: var(--lime); }
+.alert-tile:hover { filter: brightness(.98); }
 .tile-main { font-size: 22px; }
 .aqi-dot { border: 0; width: 12px; height: 12px; }
-.alert-banner {
   display: flex; flex-direction: row; align-items: center; gap: 16px; margin-bottom: 14px; padding: 12px 18px;
   border: 1px solid #F0D9A0; border-radius: 16px; background: linear-gradient(90deg, #FFF3D6, #FFF9EC);
   box-shadow: 0 1px 2px rgba(20, 40, 75, .06);
 }
-.alert-banner.is-warning { border-color: #F1C2B8; background: linear-gradient(90deg, #FDE6E1, #FFF6F3); }
-.alert-icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: #D99A1E; color: #fff; }
-.alert-banner.is-warning .alert-icon { background: #C2412D; }
-.alert-banner.is-watch .alert-icon { background: #DD6B20; }
-.alert-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.alert-main { flex: 1; min-width: 0; }
-.alert-title { font-weight: 700; font-size: 15px; color: var(--ink); }
-.alert-chips { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.alert-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 14px; background: #fff; border: 1px solid; }
-.alert-chip strong { font-weight: 700; }
-.alert-chip span { color: var(--ink-soft); font-size: 13px; }
-.alert-chip.warning { border-color: #E7A598; color: #9E2F1E; }
-.alert-chip.watch { border-color: #F2B98B; color: #9A4A0F; }
-.alert-chip.advisory { border-color: #E9CC8A; color: #7A5A0C; }
-.alert-more {
   flex: none; display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px;
   background: var(--ink); color: #fff !important; font-weight: 600; font-size: 14px; text-decoration: none;
 }
-.alert-more:hover { background: #22396A; }
-@media (max-width: 620px) { .alert-banner { flex-wrap: wrap; } .alert-more { margin-left: 56px; } }
-
+@media (max-width: 620px) { 
 /* Three boxes */
 .panels-band { padding-top: 22px; }
 .panel { border-radius: 18px; border-top: 5px solid var(--ink); }
