@@ -54,6 +54,10 @@ p { margin: 0; }
 /* Signed in: email + Sign out on their own row under the logo */
 .signed-in .top .wrap { row-gap: 10px; }
 .signed-in .top-actions { order: 3; flex-basis: 100%; }
+/* Desktop: greeting right next to the logo (phones keep it on the right for now) */
+@media (min-width: 521px) {
+  .top-greeting { margin-left: 0; margin-right: auto; text-align: left; }
+}
 .top-greeting h1 { font-size: clamp(22px, 2.2vw, 28px); }
 .top-greeting .place { margin-top: 2px; font-size: 18px; }
 .top-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
