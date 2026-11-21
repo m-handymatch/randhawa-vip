@@ -276,14 +276,9 @@
 
     centroid(place.zcta).then(function (c) {
       if (token !== aboutToken) return;
-      if (!c) { $('about-map').hidden = true; card.classList.add('no-map'); return; }
-      var d = 0.035, lat = Number(c.lat), lon = Number(c.lon);
-      var bbox = [lon - d * 1.4, lat - d, lon + d * 1.4, lat + d].map(function (n) { return n.toFixed(5); }).join(',');
-      $('about-map-frame').src = 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + lat.toFixed(5) + ',' + lon.toFixed(5);
-      $('about-map-open').href = $('about-map-link').href = 'https://www.openstreetmap.org/?mlat=' + lat.toFixed(5) + '&mlon=' + lon.toFixed(5) + '#map=13/' + lat.toFixed(5) + '/' + lon.toFixed(5);
-      $('about-map').hidden = false; card.classList.remove('no-map');
       $('about').hidden = false;
-      renderToday(lat, lon, token);
+      if (!c) { $('alert-main').textContent = 'Unavailable'; return; }
+      renderToday(Number(c.lat), Number(c.lon), token);
     });
 
     wikiCity(city, place.state).then(function (pg) {
