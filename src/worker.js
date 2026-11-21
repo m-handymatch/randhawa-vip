@@ -6,10 +6,14 @@
 // Comma-separated exact addresses and/or ranges (IPv4 or IPv6), e.g.
 //   "98.97.27.131"   or   "98.97.0.0/16, 2001:db8::/32"
 // While ALLOWED_IPS is empty, everyone is blocked (the site stays private).
-const PRIVATE_PAGE =
-  '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-  '<title>Private</title><body style="font:18px/1.5 system-ui,sans-serif;background:#E6F3FF;color:#1D2B4F;display:grid;place-items:center;min-height:100vh;margin:0">' +
-  '<p>randhawa.vip is private for now.</p></body>';
+function privatePage(ip) {
+  const safeIp = String(ip || 'unknown').replace(/[^0-9a-fA-F:.]/g, '');
+  return '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Private</title><body style="font:18px/1.5 system-ui,sans-serif;background:#E6F3FF;color:#1D2B4F;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;padding:24px">' +
+    '<div><p>randhawa.vip is private for now.</p>' +
+    '<p style="font-size:15px;color:#4A5878">Your address: <strong>' + safeIp + '</strong><br>' +
+    'If this is you, add it to ALLOWED_IPS in Cloudflare.</p></div></body>';
+}
 
 // IP address -> { v: 4|6, n: BigInt }, or null if not an IP.
 function parseIp(ip) {
@@ -60,8 +64,9 @@ export function isAllowed(visitorIp, allowedList) {
 
 export default {
   async fetch(request, env) {
-    if (!isAllowed(request.headers.get('CF-Connecting-IP'), env.ALLOWED_IPS)) {
-      return new Response(PRIVATE_PAGE, {
+    const visitorIp = request.headers.get('CF-Connecting-IP');
+    if (!isAllowed(visitorIp, env.ALLOWED_IPS)) {
+      return new Response(privatePage(visitorIp), {
         status: 403,
         headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
       });
