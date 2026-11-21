@@ -43,7 +43,7 @@ p { margin: 0; }
 .top { padding: 18px 0 14px; }
 .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
-.brand-mark { width: 64px; height: 64px; flex: none; }
+.brand-mark { width: 88px; height: 88px; flex: none; border-radius: 50%; }
 .brand-text { display: flex; flex-direction: column; }
 .brand-name { font-family: var(--display); font-size: 44px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; }
 .brand-tag { margin-top: 4px; font-size: 15px; color: var(--ink-soft); }
@@ -197,6 +197,7 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
 @media (max-width: 860px) {
   .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .home-head .wrap { grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .settings { flex-direction: column; align-items: stretch; }
   .picker { width: 100%; max-width: 340px; }
 }
 @media (max-width: 620px) {
@@ -204,7 +205,7 @@ input:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px var
   .about-photo img { height: 190px; }
 }
 @media (max-width: 520px) {
-  .brand-mark { width: 48px; height: 48px; }
+  .brand-mark { width: 64px; height: 64px; }
   .brand-name { font-size: 32px; }
   .brand-tag { font-size: 14px; }
   body { font-size: 17px; }
