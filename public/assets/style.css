@@ -729,3 +729,10 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 @supports not selector(::-webkit-scrollbar) { .box-scroll { scrollbar-color: var(--ink) rgba(255,255,255,.7); } .markets .box-scroll { scrollbar-color: var(--forest) rgba(255,255,255,.7); } }
 .evbox .evbox-note { display: flex; align-items: flex-start; gap: 6px; margin: 8px 0 2px; padding: 6px 10px; border-radius: 8px; background: #FFF6DA; border: 1px solid #F0D98A; font-size: 13px; font-weight: 600; line-height: 1.35; color: #6B4E00; }
 .evbox-note svg { flex: 0 0 16px; width: 16px; height: 16px; margin-top: 1px; fill: none; stroke: #A87400; stroke-width: 2; stroke-linecap: round; }
+
+/* ---------- Compact news stories ---------- */
+.panel .story { grid-template-columns: minmax(0, 1fr) 64px; gap: 12px; padding: 10px 0; }
+.panel .story h3 { font-size: 16px; line-height: 1.3; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.panel .story .from { font-size: 12px; margin-top: 3px; }
+.panel .story .summary { font-size: 13px; line-height: 1.4; margin-top: 2px; -webkit-line-clamp: 1; }
+.panel .story img { width: 64px; height: 48px; border-radius: 8px; }
