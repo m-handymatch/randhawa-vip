@@ -220,7 +220,7 @@
       if (i >= titles.length) return Promise.resolve(null);
       return getJSON('https://en.wikipedia.org/w/api.php?' + qs({
         action: 'query', format: 'json', formatversion: 2, origin: '*', redirects: 1, titles: titles[i],
-        prop: 'extracts|pageimages|pageprops|info|images', exintro: 1, explaintext: 1, exsentences: 6,
+        prop: 'extracts|pageimages|pageprops|info|images', exintro: 1, explaintext: 1, exsentences: 10,
         piprop: 'name', pilicense: 'free', ppprop: 'wikibase_item|disambiguation', inprop: 'url', imlimit: 60
       })).then(function (r) {
         var pg = r && r.query && r.query.pages && r.query.pages[0];
@@ -324,6 +324,22 @@
       .then(function (r) { return r.data; }).catch(function () { return null; });
   }
 
+  // The city intro fills the card down to the links row: as many whole lines
+  // as fit next to the photo and the weather/home-page column.
+  function fitExtract() {
+    var el = $('about-extract');
+    if (!el) return;
+    el.style.webkitLineClamp = ''; el.style.lineClamp = ''; el.style.maxHeight = '';
+    var lh = parseFloat(getComputedStyle(el).lineHeight) || 22;
+    var n = Math.max(2, Math.floor((el.clientHeight + 1) / lh));
+    el.style.webkitLineClamp = String(n); el.style.lineClamp = String(n);
+    el.style.maxHeight = (n * lh) + 'px';
+  }
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () { fitExtract(); }).observe(document.querySelector('.about-card'));
+  }
+  window.addEventListener('resize', fitExtract);
+
   function renderAbout(place) {
     var token = ++aboutToken;
     var card = document.querySelector('.about-card');
@@ -349,6 +365,7 @@
       }
       $('about').hidden = false;
       $('about-extract').textContent = pg.extract.replace(/\s*\([^()]*\)/, '').replace(/\s+/g, ' ').trim();
+      fitExtract();
       var wikiUrl = safeUrl(pg.fullurl) || 'https://en.wikipedia.org/wiki/' + encodeURIComponent(pg.title.replace(/ /g, '_'));
       $('about-wiki-credit').href = wikiUrl;
       $('about-text-credit').hidden = false;

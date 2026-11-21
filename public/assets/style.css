@@ -769,3 +769,11 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 .about-county-name { font-weight: 500; color: var(--ink-soft); }
 .about-credit { margin-top: 4px; font-size: 11px; }
 .about-photo figcaption { font-size: 11px; }
+.about-card { align-items: stretch; }
+.about-card .about-photo, .about-card .about-alert { align-self: start; }
+.about-text { display: flex; flex-direction: column; min-height: 0; }
+.about-text #about-extract { flex: 1 1 0; min-height: 3em; -webkit-line-clamp: 99; line-clamp: 99; }
+.about-foot { margin-top: auto; padding-top: 6px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
+.about-foot .about-links { margin-top: 0; }
+.about-foot .about-credit { margin-top: 0; }
+.about-text #about-extract { font-size: 14px; line-height: 1.45; }
