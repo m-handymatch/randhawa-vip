@@ -72,6 +72,8 @@ def main():
     print("rows", len(rows))
     if rows:
         print("columns", list(rows[0].keys()))
+        ca = next((r for r in rows if "California" in str(r.get("location_address"))), rows[0])
+        print("sample", json.dumps({k: v for k, v in ca.items() if v not in (None, "", "0")})[:4000])
     by_state = {}
     for r in rows:
         try:
