@@ -996,7 +996,9 @@
   var lastUserId;
   db.auth.onAuthStateChange(function (_event, session) {
     var id = session ? session.user.id : null;
-    if (id === lastUserId && _event !== 'INITIAL_SESSION') return;
+    // Supabase can report the same session twice on load (SIGNED_IN, then
+    // INITIAL_SESSION); only redraw when the signed-in person actually changes.
+    if (id === lastUserId) return;
     lastUserId = id;
     render(session);
   });
