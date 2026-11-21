@@ -72,9 +72,40 @@ export function isAllowed(visitorIp, allowedList) {
   return rules.some((match) => match(visitor));
 }
 
+// Admin page: mandeepsr.us shows /admin/ and is always locked to ADMIN_IPS
+// (or LOCK_TO_IPS / ALLOWED_IPS), even once the main site is public.
+const ADMIN_HOSTS = ['mandeepsr.us', 'www.mandeepsr.us'];
+
 export default {
   async fetch(request, env) {
     const visitorIp = request.headers.get('CF-Connecting-IP');
+    const adminUrl = new URL(request.url);
+    const adminHost = adminUrl.hostname.toLowerCase();
+    if (ADMIN_HOSTS.includes(adminHost)) {
+      const adminLock = String(env.ADMIN_IPS || env.LOCK_TO_IPS || env.ALLOWED_IPS || '').trim();
+      if (adminLock === '*' || !isAllowed(visitorIp, adminLock)) {
+        return new Response(privatePage(visitorIp), {
+          status: 403,
+          headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
+        });
+      }
+      if (adminHost.startsWith('www.')) {
+        adminUrl.hostname = adminHost.slice(4);
+        return Response.redirect(adminUrl.toString(), 301);
+      }
+      // "/" is the admin page; shared styles/scripts/fonts come from the site's assets.
+      const path = adminUrl.pathname === '/' ? '/admin/index.html' : adminUrl.pathname;
+      const res = await env.ASSETS.fetch(new Request(new URL(path, adminUrl), request));
+      const out = new Response(res.body, res);
+      out.headers.set('cache-control', 'no-store');
+      out.headers.set('x-robots-tag', 'noindex, nofollow');
+      out.headers.set('referrer-policy', 'no-referrer');
+      return out;
+    }
+    // The admin files only open on the admin domain.
+    if (adminUrl.pathname.startsWith('/admin/')) {
+      return new Response('Not found', { status: 404 });
+    }
     // While SITE_IS_PUBLIC is false, only the IPs in LOCK_TO_IPS (or the older ALLOWED_IPS) get in;
     // with neither set, everyone is blocked.
     const lock = String(env.LOCK_TO_IPS || env.ALLOWED_IPS || '').trim();

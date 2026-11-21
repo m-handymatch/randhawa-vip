@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin | localconnect.site</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css?v=1">
+  <link rel="icon" href="/assets/favicon-64.png" type="image/png">
+</head>
+<body>
+<header class="bar">
+  <div class="wrap bar-in">
+    <div class="brand">
+      <img src="/assets/logo-192.png" width="44" height="44" alt="">
+      <div>
+        <p class="brand-name">localconnect<span>.site</span> admin</p>
+        <p class="brand-sub">mandeepsr.us, open only to your IP addresses</p>
+      </div>
+    </div>
+    <div class="who" id="who" hidden>
+      <span id="who-email"></span>
+      <button type="button" id="signout" class="btn-quiet">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <section class="card signin" id="signin" hidden>
+    <h1>Sign in</h1>
+    <p class="muted">Use your localconnect.site admin account.</p>
+    <form id="signin-form">
+      <label>Email <input type="email" name="email" autocomplete="username" required></label>
+      <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+      <button type="submit" class="btn">Sign in</button>
+      <p class="hint" id="signin-hint" role="status"></p>
+    </form>
+  </section>
+
+  <p class="loading" id="loading">Loading…</p>
+  <p class="error" id="not-admin" hidden>This account isn't an admin.</p>
+
+  <div id="app" hidden>
+    <section class="glance" aria-labelledby="glance-title">
+      <h2 id="glance-title" class="sr-only">At a glance</h2>
+      <div class="totals">
+        <div class="total">
+          <p class="total-label">Monthly cost</p>
+          <p class="total-num" id="t-month">$0</p>
+        </div>
+        <div class="total">
+          <p class="total-label">Yearly cost</p>
+          <p class="total-num" id="t-year">$0</p>
+          <p class="total-note" id="t-year-note"></p>
+        </div>
+        <div class="total">
+          <p class="total-label">One-time cost</p>
+          <p class="total-num" id="t-once">$0</p>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <div class="cols">
+      <section class="card ledger" aria-labelledby="ledger-title">
+        <div class="card-head">
+          <h2 id="ledger-title">Registrations and costs</h2>
+          <button type="button" class="btn-quiet" id="edit-costs" aria-pressed="false">Edit costs</button>
+        </div>
+        <p class="muted">Everything this project signed up for or uses. $0 means free. Prices you haven't entered yet say so.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Service</th><th scope="col">Plan</th><th scope="col" class="num">Monthly</th><th scope="col" class="num">Yearly</th><th scope="col" class="num">One-time</th><th scope="col">Renews</th></tr>
+            </thead>
+            <tbody id="ledger"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="ledger-hint" role="status"></p>
+      </section>
+
+      <section class="card next" aria-labelledby="next-title">
+        <div class="card-head">
+          <h2 id="next-title">Next up</h2>
+          <span class="count" id="next-count"></span>
+        </div>
+        <ol class="next-list" id="next"></ol>
+        <details class="done-wrap" id="done-wrap" hidden>
+          <summary>Done (<span id="done-count">0</span>)</summary>
+          <ol class="next-list done" id="done"></ol>
+        </details>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="/admin/admin.js?v=1"></script>
+</body>
+</html>

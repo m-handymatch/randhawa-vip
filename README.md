@@ -138,3 +138,10 @@ Any other area, by hand: make a one-time token in Supabase SQL (20 minutes):
 then run the Action with a bounding box (`west,south,east,north`) and that token.
 
 Don't send cold email to this list through Resend (its policy forbids unsolicited email, and it also sends the site's sign-in mail).
+
+## Admin page (mandeepsr.us)
+
+`mandeepsr.us` shows `public/admin/` and nothing else. The Worker always locks it to `ADMIN_IPS` (or, if that isn't set, `LOCK_TO_IPS` / `ALLOWED_IPS`), even after the main site goes public, and the `/admin/` files return 404 on every other domain. The page also asks for your site sign-in, and the data (`admin_ledger`, `admin_next`, `admin_stats()`) is readable only by admins, so the IP lock is not the only lock.
+
+To set it up: Cloudflare → Workers & Pages → randhawa-vip → Settings → Domains & Routes → Add → Custom domain → `mandeepsr.us` (and `www.mandeepsr.us`).
+Costs can be edited on the page ("Edit costs"); "Next up" items can be ticked off there.
