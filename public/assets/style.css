@@ -57,6 +57,16 @@ p { margin: 0; }
 .top-greeting .top-actions { margin-top: 10px; gap: 10px; }
 .top-greeting .who { font-size: 14px; }
 .top-settings[hidden] { display: none; }
+/* Wide desktop, signed in: greeting left, Change ZIP centred, Nearby cities right.
+   The outer columns match (logo width on the left, a spacer on the right) so the middle is truly centred. */
+@media (min-width: 980px) {
+  .signed-in .top .wrap { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto minmax(0, 1fr) 88px; column-gap: 20px; align-items: center; }
+  .signed-in .brand { grid-column: 1; grid-row: 1; }
+  .signed-in .top-greeting { grid-column: 2; grid-row: 1; }
+  .signed-in .top-settings { display: contents; }
+  .signed-in #zip-form { grid-column: 3; grid-row: 1; }
+  .signed-in #places-form { grid-column: 4 / 6; grid-row: 1; justify-self: end; }
+}
 /* Desktop: greeting right next to the logo (phones keep it on the right for now) */
 @media (min-width: 521px) {
   .top-greeting { margin-left: 0; margin-right: auto; text-align: left; }
