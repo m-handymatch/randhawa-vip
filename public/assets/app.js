@@ -603,6 +603,22 @@
     return a;
   }
 
+  // ---------- Garage & estate sales: links to each site's own listings ----------
+  function renderSales(cities) {
+    var list = $('sales-list'); list.innerHTML = '';
+    cities.forEach(function (c) {
+      var li = document.createElement('li'); li.className = 'oh-row';
+      var name = document.createElement('span'); name.className = 'oh-city'; name.textContent = c.city;
+      var links = document.createElement('span'); links.className = 'oh-links';
+      var cityPath = c.city.replace(/ /g, '-');
+      links.appendChild(ohLink('https://www.estatesales.net/' + c.st + '/' + encodeURIComponent(cityPath) + (c.zip ? '/' + c.zip : ''), 'EstateSales.net'));
+      links.appendChild(ohLink('https://estatesales.org/estate-sales/' + c.st.toLowerCase() + '/' + encodeURIComponent(slug(c.city)), 'EstateSales.org'));
+      links.appendChild(ohLink('https://www.google.com/search?q=' + encodeURIComponent('garage sales this weekend ' + c.city + ', ' + c.st), 'Garage sales'));
+      li.append(name, links);
+      list.appendChild(li);
+    });
+  }
+
   function renderOpenHouses() {
     var list = $('oh-list'); list.innerHTML = ''; $('hv-credit').hidden = true;
     var p = state.profile;
@@ -631,6 +647,7 @@
         li.append(name, links);
         list.appendChild(li);
       });
+      renderSales(cities);
       return homeValues(cities[0].st).then(function (hv) {
         if (!hv) return;
         var any = false;
