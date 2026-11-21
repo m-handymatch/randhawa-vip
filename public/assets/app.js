@@ -402,14 +402,28 @@
     var f = e.target, zip = f.zip.value.trim(), hint = $('zip-change-hint'), btn = f.querySelector('button');
     if (!validZip(zip)) { hint.textContent = 'Enter a 5-digit ZIP code.'; hint.className = 'hint bad'; return; }
     btn.disabled = true;
+    var moved = zip !== state.profile.zip;
     lookupZip(zip).then(function (p) {
       if (!p) throw new Error('We don’t recognize that ZIP code.');
-      return db.from('profiles').update({ zip: zip }).eq('id', state.user.id);
+      // A new ZIP means a new set of neighbors: clear the old nearby cities.
+      var changes = moved ? { zip: zip, nearby_places: [] } : { zip: zip };
+      return db.from('profiles').update(changes).eq('id', state.user.id);
     }).then(function (r) {
       if (r.error) throw r.error;
       state.profile.zip = zip;
+      if (moved) state.profile.nearby_places = [];
       f.reset(); hint.textContent = 'Updated.'; hint.className = 'hint ok';
-      return renderPlace().then(function () { loadNews(); loadNearbyOptions(); });
+      if (moved) { $('places-hint').textContent = 'Pick up to 5 cities near your new ZIP.'; $('places-hint').className = 'hint'; }
+      return renderPlace().then(function () {
+        loadNews();
+        return loadNearbyOptions().then(function () {
+          if (!moved) return;
+          var picker = $('places-picker');
+          picker.open = true;
+          picker.querySelector('summary').focus({ preventScroll: true });
+          picker.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        });
+      });
     }).catch(function (err) {
       hint.textContent = (err && err.message) || 'Couldn’t update your ZIP. Try again.'; hint.className = 'hint bad';
     }).finally(function () { btn.disabled = false; });
