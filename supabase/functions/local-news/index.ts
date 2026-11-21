@@ -100,9 +100,9 @@ async function fetchNews(apiKey: string, city: string, state: string): Promise<A
   return found.slice(0, MAX_ARTICLES);
 }
 
-// Optional IP allowlist: set the secret ALLOWED_IPS to a comma-separated list
-// (e.g. "98.97.24.171, 203.0.113.5"). Leave it unset to allow everyone.
-const ALLOWED_IPS = (Deno.env.get("ALLOWED_IPS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+// Optional IP allowlist: set the secret ALLOWED_IPS to comma-separated addresses
+// and/or ranges, e.g. "98.97.27.131" or "98.97.0.0/16". Leave it unset to allow everyone.
+const ALLOWED_IPS = Deno.env.get("ALLOWED_IPS") ?? "";
 
 function clientIp(req: Request): string {
   return (req.headers.get("cf-connecting-ip")
@@ -110,10 +110,48 @@ function clientIp(req: Request): string {
     ?? (req.headers.get("x-forwarded-for") ?? "").split(",")[0]).trim();
 }
 
+function parseIp(ip: string): { v: 4 | 6; n: bigint } | null {
+  ip = ip.trim();
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) {
+    const parts = ip.split(".").map(Number);
+    if (parts.some((p) => p > 255)) return null;
+    return { v: 4, n: parts.reduce((acc, p) => (acc << 8n) + BigInt(p), 0n) };
+  }
+  if (ip.includes(":")) {
+    const mapped = ip.match(/^::ffff:(\d{1,3}(\.\d{1,3}){3})$/i);
+    if (mapped) return parseIp(mapped[1]);
+    const halves = ip.split("::");
+    if (halves.length > 2) return null;
+    const head = halves[0] ? halves[0].split(":") : [];
+    const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+    const missing = 8 - head.length - tail.length;
+    if (halves.length === 1 ? missing !== 0 : missing < 1) return null;
+    const groups = [...head, ...Array(halves.length === 2 ? missing : 0).fill("0"), ...tail];
+    if (groups.some((g) => !/^[0-9a-f]{1,4}$/i.test(g))) return null;
+    return { v: 6, n: groups.reduce((acc, g) => (acc << 16n) + BigInt(parseInt(g, 16)), 0n) };
+  }
+  return null;
+}
+
+function isAllowed(visitorIp: string, list: string): boolean {
+  const visitor = parseIp(visitorIp);
+  if (!visitor) return false;
+  return list.split(",").map((r) => r.trim()).filter(Boolean).some((rule) => {
+    const [addr, bitsText] = rule.split("/");
+    const ip = parseIp(addr);
+    if (!ip || ip.v !== visitor.v) return false;
+    const width = ip.v === 4 ? 32 : 128;
+    const bits = bitsText === undefined ? width : Number(bitsText);
+    if (!Number.isInteger(bits) || bits < 0 || bits > width) return false;
+    const shift = BigInt(width - bits);
+    return (visitor.n >> shift) === (ip.n >> shift);
+  });
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
-  if (ALLOWED_IPS.length && !ALLOWED_IPS.includes(clientIp(req))) {
+  if (ALLOWED_IPS.trim() && !isAllowed(clientIp(req), ALLOWED_IPS)) {
     return reply(403, { error: "This site is private" }, origin);
   }
   if (req.method !== "GET") return reply(405, { error: "Use GET" }, origin);

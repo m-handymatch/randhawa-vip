@@ -45,7 +45,7 @@ const { location, articles } = await res.json();
 
 ### Publish it (Cloudflare Workers)
 
-The site lives in `public/`; `src/worker.js` runs first on every request and lets in only the IPs in the variable `ALLOWED_IPS` (comma-separated). Empty = everyone blocked. `wrangler.jsonc` ties them together.
+The site lives in `public/`; `src/worker.js` runs first on every request and lets in only the IPs in the variable `ALLOWED_IPS`: comma-separated addresses or ranges such as `98.97.0.0/16` (IPv4 or IPv6). Empty = everyone blocked. `keep_vars` in `wrangler.jsonc` keeps dashboard variables across deploys; ignore Cloudflare's suggestion to copy them into the config (the repo is public). `wrangler.jsonc` ties them together.
 
 1. Cloudflare → **Workers & Pages → Create application → Import a repository** → `m-handymatch/randhawa-vip`.
 2. Build command: leave empty. Deploy command: `npx wrangler deploy`. Deploy.
@@ -57,7 +57,7 @@ The site lives in `public/`; `src/worker.js` runs first on every request and let
 
 - Website: `src/worker.js` lets in only the IPs in the Worker variable `ALLOWED_IPS`. Covers randhawa.vip and the *.workers.dev address.
 - Optional extra layer: Cloudflare **Security → Security rules → Create rule → Custom rules**, block when `not ip.src in {YOUR.IP}`.
-- News function: Supabase secret `ALLOWED_IPS` (comma-separated). Unset = open to everyone.
+- News function: Supabase secret `ALLOWED_IPS` (same format, addresses or ranges). Unset = open to everyone.
 
 To use the randhawa.vip domain later: add it under Settings → Pages → Custom domain, point the DNS records GitHub shows, then update the Site URL in Supabase.
 

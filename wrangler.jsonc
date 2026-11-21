@@ -3,6 +3,9 @@
   "name": "randhawa-vip",
   "main": "src/worker.js",
   "compatibility_date": "2025-09-01",
+  // ALLOWED_IPS is set in the Cloudflare dashboard (not here, the repo is public);
+  // keep_vars stops each deploy from wiping it.
+  "keep_vars": true,
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
