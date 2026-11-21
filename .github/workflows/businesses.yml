@@ -1,0 +1,30 @@
+# Extracts local businesses from Overture Maps Places for a bounding box.
+# Run by hand (Actions -> Extract local businesses -> Run workflow). The CSV is
+# kept as a workflow artifact for 7 days and is NOT committed to this public repo.
+name: Extract local businesses
+on:
+  workflow_dispatch:
+    inputs:
+      bbox:
+        description: "west,south,east,north"
+        default: "-122.80,37.88,-122.45,38.32"
+permissions:
+  contents: read
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install overturemaps duckdb
+      - run: python scripts/businesses.py
+        env:
+          BBOX: ${{ inputs.bbox }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: businesses
+          path: businesses.csv
+          retention-days: 7
