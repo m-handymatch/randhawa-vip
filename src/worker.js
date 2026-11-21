@@ -66,6 +66,12 @@ export default {
         headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
       });
     }
+    // www.randhawa.vip -> randhawa.vip, so there's one site (and one sign-in).
+    const url = new URL(request.url);
+    if (url.hostname === 'www.randhawa.vip') {
+      url.hostname = 'randhawa.vip';
+      return Response.redirect(url.toString(), 301);
+    }
     return env.ASSETS.fetch(request);
   },
 };
