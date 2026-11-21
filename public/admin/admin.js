@@ -117,6 +117,56 @@
     });
   }
 
+  // ---------- Business money ----------
+  function loadMoney() {
+    return db.from('admin_money').select('*').order('happened_on', { ascending: false }).order('id', { ascending: false }).then(function (r) {
+      var rows = r.data || [], have = 0, planned = 0;
+      var list = $('money-list'); list.innerHTML = '';
+      rows.forEach(function (m) {
+        var amt = Number(m.amount);
+        if (m.planned) planned += amt; else have += amt;
+        var li = document.createElement('li');
+        var d = document.createElement('span'); d.textContent = m.description;
+        var a = document.createElement('span'); a.className = 'amt' + (amt > 0 ? ' in' : '');
+        a.textContent = (amt < 0 ? '\u2212' : '+') + money(Math.abs(amt));
+        var sub = document.createElement('span'); sub.className = 'sub';
+        var when = document.createElement('span');
+        when.textContent = new Date(m.happened_on + 'T12:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + m.account;
+        sub.appendChild(when);
+        if (m.planned) {
+          var tag = document.createElement('span'); tag.className = 'planned'; tag.textContent = 'Planned';
+          var done = document.createElement('button'); done.type = 'button'; done.className = 'linkbtn'; done.textContent = 'Mark as done today';
+          done.addEventListener('click', function () {
+            db.from('admin_money').update({ planned: false, happened_on: new Date().toISOString().slice(0, 10) }).eq('id', m.id).then(loadMoney);
+          });
+          sub.append(tag, done);
+        }
+        var del = document.createElement('button'); del.type = 'button'; del.className = 'linkbtn'; del.textContent = 'Remove';
+        del.addEventListener('click', function () {
+          if (window.confirm('Remove "' + m.description + '"?')) db.from('admin_money').delete().eq('id', m.id).then(loadMoney);
+        });
+        sub.appendChild(del);
+        li.append(d, a, sub);
+        list.appendChild(li);
+      });
+      $('money-balance').textContent = (have < 0 ? '\u2212' : '') + money(Math.abs(have));
+      $('money-planned').hidden = !planned;
+      $('money-planned').textContent = money(Math.abs(planned)) + (planned >= 0 ? ' planned to come in' : ' planned to go out');
+    });
+  }
+  $('money-form').happened_on.value = new Date().toISOString().slice(0, 10);
+  $('money-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, amt = Number(f.amount.value);
+    if (!amt) { $('money-hint').textContent = 'Enter an amount (negative for spending).'; return; }
+    db.from('admin_money').insert({ description: f.description.value.trim(), amount: amt, happened_on: f.happened_on.value })
+      .then(function (r) {
+        if (r.error) { $('money-hint').textContent = 'Couldn\u2019t save: ' + r.error.message; return; }
+        f.description.value = ''; f.amount.value = '';
+        $('money-hint').textContent = 'Added.'; loadMoney();
+      });
+  });
+
   function stat(label, value, meter) {
     var d = document.createElement('div'); d.className = 'stat';
     var n = document.createElement('p'); n.className = 'stat-num'; n.textContent = value;
@@ -153,7 +203,7 @@
       $('app').hidden = false;
       return Promise.all([
         db.from('admin_ledger').select('*').order('sort').then(function (res) { ledger = res.data || []; renderLedger(); }),
-        loadNext(), loadStats()
+        loadNext(), loadStats(), loadMoney()
       ]);
     });
   }
@@ -192,7 +242,7 @@
     last = null;
     $('signin').hidden = false; $('who').hidden = true;
     $('app').hidden = true; $('not-admin').hidden = true; $('loading').hidden = true;
-    ledger = []; $('ledger').innerHTML = ''; $('next').innerHTML = ''; $('stats').innerHTML = '';
+    ledger = []; $('ledger').innerHTML = ''; $('next').innerHTML = ''; $('stats').innerHTML = ''; $('money-list').innerHTML = '';
   }
   db.auth.onAuthStateChange(function (_e, session) {
     var id = session ? session.user.id : null;

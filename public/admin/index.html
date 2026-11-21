@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/admin/admin.css?v=2">
+  <link rel="stylesheet" href="/admin/admin.css?v=3">
   <link rel="icon" href="/assets/favicon-64.png" type="image/png">
 </head>
 <body>
@@ -82,6 +82,23 @@
         <p class="hint" id="ledger-hint" role="status"></p>
       </section>
 
+      <div class="side">
+      <section class="card money" aria-labelledby="money-title">
+        <div class="card-head">
+          <h2 id="money-title">Business money</h2>
+          <span class="count" id="money-account">PayPal Business</span>
+        </div>
+        <p class="money-balance"><span id="money-balance">$0</span> <span class="muted">on hand</span></p>
+        <p class="money-planned" id="money-planned" hidden></p>
+        <ul class="money-list" id="money-list"></ul>
+        <form class="money-form" id="money-form">
+          <label>What <input name="description" required maxlength="120" placeholder="e.g. FBN filing fee"></label>
+          <label>Amount <input name="amount" type="number" step="0.01" required placeholder="-42 or 2000"></label>
+          <label>Date <input name="happened_on" type="date" required></label>
+          <button type="submit" class="btn-quiet">Add</button>
+        </form>
+        <p class="hint" id="money-hint" role="status">Money in is positive, money out is negative.</p>
+      </section>
       <section class="card next" aria-labelledby="next-title">
         <div class="card-head">
           <h2 id="next-title">Next up</h2>
@@ -93,11 +110,12 @@
           <ol class="next-list done" id="done"></ol>
         </details>
       </section>
+      </div>
     </div>
   </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="/admin/admin.js?v=2"></script>
+<script src="/admin/admin.js?v=3"></script>
 </body>
 </html>
