@@ -697,6 +697,9 @@
   // ---------- Garage & estate sales: links to each site's own listings ----------
   function renderSales(cities) {
     var list = $('sales-list'); list.innerHTML = '';
+    var names = cities.map(function (c) { return c.city; });
+    $('sales-note').textContent = names.length ? 'From ' + listJoin(names) + '.' : 'This week\u2019s sales on each site.';
+    $('sales-note').title = $('sales-note').textContent;
     cities.forEach(function (c) {
       var li = document.createElement('li'); li.className = 'oh-row';
       var name = document.createElement('span'); name.className = 'oh-city'; name.textContent = c.city;
