@@ -542,6 +542,7 @@
     show($('who'), !!state.user);
     show($('signout'), !!state.user);
     show($('top-greeting'), !!state.user);
+    show($('top-settings'), !!state.user);
     document.body.classList.toggle('signed-in', !!state.user);
     if (!state.user) { state.profile = null; setStreetZip(''); return; }
     loadProfile().then(renderPlace).then(function () { loadNews(); loadNearbyOptions(); });
