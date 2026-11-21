@@ -4,19 +4,44 @@ Runs from a GitHub Action; the CSV is uploaded as a workflow artifact (not
 committed) and loaded into the admin-only Supabase table `businesses`.
 
 BBOX env: "west,south,east,north" (longitude/latitude)."""
-import csv, json, os, subprocess, sys
+import csv, json, os, sys, time
 import duckdb
+
+_release = None
+
+
+def latest_release():
+  """Overture's latest release, looked up once per run (their catalog rate-limits)."""
+  global _release
+  if _release:
+    return _release
+  from overturemaps.core import get_latest_release
+  for attempt in range(6):
+    try:
+      _release = get_latest_release()
+      return _release
+    except Exception as e:  # noqa: BLE001  (HTTP 429 from the catalog)
+      wait = 15 * 2 ** attempt
+      print(f"release lookup failed ({e}); retrying in {wait}s")
+      time.sleep(wait)
+  raise RuntimeError("Could not look up the latest Overture release")
+
 
 def extract(bbox, out="businesses.csv"):
   """Writes the businesses inside bbox ("west,south,east,north") to out; returns the row count."""
-  subprocess.run([sys.executable, "-m", "overturemaps.cli", "download", f"--bbox={bbox}",
-                  "-f", "geoparquet", "--type=place", "-o", "places.parquet"], check=True)
+  import pyarrow.parquet as pq
+  from overturemaps.core import record_batch_reader
+  box = tuple(float(x) for x in bbox.split(","))
+  reader = record_batch_reader("place", box, latest_release())
+  with pq.ParquetWriter("places.parquet", reader.schema) as w:
+    for batch in reader:
+      w.write_batch(batch)
   return _write(out)
 
 
 def _write(out):
   con = duckdb.connect()
-  con.execute("INSTALL spatial; LOAD spatial;")
+  # points: the bbox corner is the location (no spatial extension needed)
   cols = [r[0] for r in con.execute("DESCRIBE SELECT * FROM 'places.parquet'").fetchall()]
   print("columns:", cols)
 
@@ -29,7 +54,7 @@ def _write(out):
            addresses[1].region AS state,
            addresses[1].postcode AS postcode,
            addresses[1].country AS country,
-           ST_Y(geometry) AS lat, ST_X(geometry) AS lon,
+           bbox.ymin AS lat, bbox.xmin AS lon,
            websites, phones, emails, socials,
            confidence,
            """ + ("operating_status" if "operating_status" in cols else "NULL") + """ AS status
