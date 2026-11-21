@@ -124,3 +124,15 @@ All loaded in the visitor's browser from free public sources (no keys), except h
 ## Farmers markets
 
 The top of the Local events box lists farmers markets within 6 miles of the home city and the picked nearby cities. The data is the USDA National Farmers Market Directory (USDA AMS Local Food Portal export), refreshed every Monday by `.github/workflows/farmers-markets.yml` (`scripts/farmers_markets.py`) into `public/data/farmers-markets/{lat}_{lon}.json`, one file per 1-degree square. Duplicate listings within about 250 m keep the most recently updated one. The directory has no reliable hours, so the box asks people to check before they go.
+
+## Local businesses (admin only)
+
+`public.businesses` holds local businesses from Overture Maps Places (CDLA-Permissive-2.0): name, category, address, ZIP, website, phone and email when listed. Only site admins can read it (RLS uses `private.is_admin()`).
+
+To refresh or add an area:
+1. In Supabase SQL, make a one-time token (20 minutes):
+   `insert into private.import_tokens (token, purpose, expires_at) values (replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''), 'businesses', now() + interval '20 minutes') returning token;`
+2. GitHub → Actions → **Extract local businesses** → Run workflow, with the area's bounding box (`west,south,east,north`) and the token.
+The workflow downloads Overture places for the box and sends them to the `businesses-import` function, which accepts each token once. Nothing is committed to this public repo.
+
+Don't send cold email to this list through Resend (its policy forbids unsolicited email, and it also sends the site's sign-in mail).
