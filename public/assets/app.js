@@ -260,7 +260,6 @@
       .then(function (r) {
         state.profile = r.data || { display_name: null, zip: null, nearby_places: [] };
         state.profile.nearby_places = state.profile.nearby_places || [];
-        $('places-input').value = state.profile.nearby_places.join(', ');
       });
   }
 
@@ -278,7 +277,7 @@
       if (r.error) throw r.error;
       state.profile.zip = zip;
       f.reset(); hint.textContent = 'Updated.'; hint.className = 'hint ok';
-      return renderPlace().then(loadNews);
+      return renderPlace().then(function () { loadNews(); loadNearbyOptions(); });
     }).catch(function (err) {
       hint.textContent = (err && err.message) || 'Couldn’t update your ZIP. Try again.'; hint.className = 'hint bad';
     }).finally(function () { btn.disabled = false; });
@@ -289,27 +288,103 @@
     return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
   }
 
+  // ---------- Nearby cities picker ----------
+  var MAX_PLACES = 5;
+  var homeState = '';
+
+  // Saved values are "City, ST"; older ones may be a bare name (home state).
+  function placeKey(value) {
+    var m = String(value).match(/^(.*\S),\s*([A-Z]{2})$/);
+    return (m ? m[1] + ', ' + m[2] : value + ', ' + homeState).toLowerCase();
+  }
+
+  function updatePickerSummary() {
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('#places-options input'));
+    var chosen = boxes.filter(function (b) { return b.checked; });
+    boxes.forEach(function (b) { if (!b.checked) b.disabled = chosen.length >= MAX_PLACES; });
+    $('places-summary').textContent = chosen.length
+      ? chosen.map(function (b) { return b.getAttribute('data-name'); }).join(', ')
+      : 'Choose up to ' + MAX_PLACES;
+  }
+
+  function renderPicker(options) {
+    var box = $('places-options');
+    box.innerHTML = '';
+    var saved = (state.profile.nearby_places || []);
+    var savedKeys = saved.map(placeKey);
+    var seen = {};
+    // Saved places that aren't among the nearest still show (and stay ticked).
+    var all = options.map(function (o) { return { value: o.city + ', ' + o.state, name: o.city, miles: o.miles }; });
+    saved.forEach(function (v) {
+      if (!all.some(function (o) { return placeKey(o.value) === placeKey(v); })) {
+        all.unshift({ value: v, name: String(v).replace(/,\s*[A-Z]{2}$/, ''), miles: null });
+      }
+    });
+    if (!all.length) {
+      box.innerHTML = '<p class="hint">No nearby cities found for this ZIP.</p>';
+      updatePickerSummary();
+      return;
+    }
+    all.forEach(function (o) {
+      var key = placeKey(o.value);
+      if (seen[key]) return; seen[key] = true;
+      var label = document.createElement('label');
+      var input = document.createElement('input');
+      input.type = 'checkbox'; input.value = o.value; input.setAttribute('data-name', o.name);
+      input.checked = savedKeys.indexOf(key) !== -1;
+      input.addEventListener('change', updatePickerSummary);
+      var name = document.createElement('span');
+      var stateSuffix = /,\s*([A-Z]{2})$/.exec(o.value);
+      name.textContent = o.name + (stateSuffix && stateSuffix[1] !== homeState ? ', ' + stateSuffix[1] : '');
+      label.append(input, name);
+      if (o.miles != null) {
+        var mi = document.createElement('span'); mi.className = 'miles'; mi.textContent = o.miles + ' mi';
+        label.appendChild(mi);
+      }
+      box.appendChild(label);
+    });
+    updatePickerSummary();
+  }
+
+  function loadNearbyOptions() {
+    var zip = state.profile && state.profile.zip;
+    if (!zip) { $('places-options').innerHTML = '<p class="hint">Add your ZIP code first.</p>'; return Promise.resolve(); }
+    return lookupZip(zip).then(function (p) {
+      homeState = p ? p.state : '';
+      return db.rpc('nearby_cities', { p_zip: zip, p_limit: 15 });
+    }).then(function (r) {
+      renderPicker((r && r.data) || []);
+    }).catch(function () {
+      $('places-options').innerHTML = '<p class="hint bad">Couldn\u2019t load nearby cities.</p>';
+    });
+  }
+
   $('places-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    var f = e.target, hint = $('places-hint'), btn = f.querySelector('button');
-    var places = f.places.value.split(',')
-      .map(function (p) { return p.replace(/\s+/g, ' ').trim(); })
-      .filter(function (p, i, all) { return p && all.findIndex(function (q) { return q.toLowerCase() === p.toLowerCase(); }) === i; });
-    if (places.length > 5) { hint.textContent = 'Pick up to 5 places.'; hint.className = 'hint bad'; return; }
-    if (places.some(function (p) { return p.length > 60 || /[<>"]/.test(p); })) {
-      hint.textContent = 'Keep each place under 60 characters, letters and spaces only.'; hint.className = 'hint bad'; return;
-    }
+    var hint = $('places-hint'), btn = e.target.querySelector('button[type=submit]');
+    var places = Array.prototype.slice.call(document.querySelectorAll('#places-options input:checked'))
+      .map(function (b) { return b.value; }).slice(0, MAX_PLACES);
     btn.disabled = true;
     db.from('profiles').update({ nearby_places: places }).eq('id', state.user.id).then(function (r) {
       if (r.error) throw r.error;
       state.profile.nearby_places = places;
-      f.places.value = places.join(', ');
-      hint.textContent = places.length ? 'Saved. Loading news for ' + listJoin(places) + '\u2026' : 'Saved.';
+      $('places-picker').open = false;
+      hint.textContent = places.length ? 'Saved. Adding their news\u2026' : 'Saved.';
       hint.className = 'hint ok';
       loadNews();
     }).catch(function () {
-      hint.textContent = 'Couldn\u2019t save your places. Try again.'; hint.className = 'hint bad';
+      hint.textContent = 'Couldn\u2019t save. Try again.'; hint.className = 'hint bad';
     }).finally(function () { btn.disabled = false; });
+  });
+
+  // Close the picker when clicking elsewhere or pressing Escape.
+  document.addEventListener('click', function (e) {
+    var picker = $('places-picker');
+    if (picker.open && !picker.contains(e.target)) picker.open = false;
+  });
+  document.addEventListener('keydown', function (e) {
+    var picker = $('places-picker');
+    if (e.key === 'Escape' && picker.open) { picker.open = false; picker.querySelector('summary').focus(); }
   });
 
   // ---------- Which screen ----------
@@ -321,7 +396,7 @@
     show($('who'), !!state.user);
     show($('signout'), !!state.user);
     if (!state.user) { state.profile = null; setStreetZip(''); return; }
-    loadProfile().then(renderPlace).then(loadNews);
+    loadProfile().then(renderPlace).then(function () { loadNews(); loadNearbyOptions(); });
   }
 
   var lastUserId;

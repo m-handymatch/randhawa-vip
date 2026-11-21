@@ -96,3 +96,52 @@ grant update (nearby_places) on public.profiles to authenticated;
 grant usage on schema private to authenticated;
 revoke all on function private.valid_places(text[]) from public, anon;
 grant execute on function private.valid_places(text[]) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- ZCTA centroids (Census 2020 Gazetteer, public domain) + nearby cities lookup
+-- Loaded once from https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/2020_Gaz_zcta_national.zip
+-- ---------------------------------------------------------------------------
+create table if not exists public.zcta_centroids (
+  zcta text primary key,
+  lat  double precision not null,
+  lon  double precision not null
+);
+alter table public.zcta_centroids enable row level security;
+drop policy if exists "anyone can read zcta_centroids" on public.zcta_centroids;
+create policy "anyone can read zcta_centroids" on public.zcta_centroids for select using (true);
+grant select on public.zcta_centroids to anon, authenticated;
+
+-- Closest other cities to a ZIP, by straight-line miles between ZCTA centroids.
+create or replace function public.nearby_cities(p_zip text, p_limit integer default 12)
+returns table(city text, state text, miles numeric)
+language sql stable
+set search_path to 'public'
+as $function$
+  with home as (
+    select z.city, z.state, c.lat, c.lon
+    from zip_zcta z join zcta_centroids c on c.zcta = z.zcta
+    where z.zip = p_zip
+  ),
+  candidates as (
+    select z.city, z.state, c.lat, c.lon
+    from zip_zcta z join zcta_centroids c on c.zcta = z.zcta, home h
+    where z.zip_type = 'ZIP Code Area'
+      and abs(c.lat - h.lat) < 1.2 and abs(c.lon - h.lon) < 1.6          -- ~80 miles box, keeps it fast
+      and not (lower(z.city) = lower(h.city) and z.state = h.state)
+  ),
+  distances as (
+    select c.city, c.state,
+           3958.8 * 2 * asin(sqrt(
+             power(sin(radians(c.lat - h.lat) / 2), 2) +
+             cos(radians(h.lat)) * cos(radians(c.lat)) * power(sin(radians(c.lon - h.lon) / 2), 2)
+           )) as mi
+    from candidates c, home h
+  )
+  select city, state, round(min(mi)::numeric, 1) as miles
+  from distances
+  group by city, state
+  order by min(mi)
+  limit least(greatest(coalesce(p_limit, 12), 1), 25);
+$function$;
+revoke execute on function public.nearby_cities(text, integer) from public, anon;
+grant execute on function public.nearby_cities(text, integer) to authenticated;

@@ -104,12 +104,18 @@
             <span class="hint" id="zip-change-hint" aria-live="polite"></span>
           </form>
           <form class="zip-form" id="places-form" novalidate>
-            <label for="places-input">Nearby places</label>
-            <div class="zip-row">
-              <input id="places-input" name="places" maxlength="320" placeholder="e.g. Oakland, Daly City" aria-describedby="places-hint">
-              <button class="btn btn-quiet btn-small" type="submit">Save</button>
-            </div>
-            <span class="hint" id="places-hint" aria-live="polite">Up to 5, separated by commas. We'll add their news too.</span>
+            <span class="field-label" id="places-label">Nearby cities</span>
+            <details class="picker" id="places-picker">
+              <summary id="places-summary">Choose up to 5</summary>
+              <div class="picker-panel">
+                <fieldset aria-labelledby="places-label">
+                  <legend class="sr-only">Nearby cities, closest first</legend>
+                  <div class="picker-list" id="places-options"><p class="hint">Loading nearby cities…</p></div>
+                </fieldset>
+                <button class="btn btn-small" type="submit">Save</button>
+              </div>
+            </details>
+            <span class="hint" id="places-hint" aria-live="polite">We'll add their news to yours.</span>
           </form>
         </div>
       </div>

@@ -273,21 +273,32 @@ Deno.serve(async (req) => {
   const location = { zip: place.zip, zcta: place.zcta, city: place.city, state: place.state };
 
   // Nearby places from the profile (only when using the profile's own ZIP).
-  let nearby: string[] = [];
+  // Saved as "City, ST" (from the nearby-cities picker); a bare name means the home state.
+  type Nearby = { name: string; state: string; label: string };
+  let nearby: Nearby[] = [];
   if (!requested) {
     const { data: prof } = await db.from("profiles").select("nearby_places").eq("id", auth.user.id).maybeSingle();
     nearby = (prof?.nearby_places ?? [])
-      .map((p: string) => p.trim())
-      .filter((p: string) => p && p.toLowerCase() !== place.city.toLowerCase())
+      .map((raw: string): Nearby | null => {
+        const p = raw.trim();
+        const m = p.match(/^(.*\S),\s*([A-Z]{2})$/);
+        const name = (m ? m[1] : p).trim();
+        const st = m ? m[2] : place.state;
+        if (!name || !STATE_NAMES[st]) return null;
+        return { name, state: st, label: st === place.state ? name : `${name}, ${st}` };
+      })
+      .filter((n: Nearby | null): n is Nearby =>
+        !!n && !(n.name.toLowerCase() === place.city.toLowerCase() && n.state === place.state))
       .slice(0, 5);
   }
 
   const apiKey = Deno.env.get("NEWSDATA_API_KEY");
+  const labels = [place.city, ...nearby.map((n) => n.label)];
   const lists = await Promise.all([
     placeNews(db, place.city, place.state, true, apiKey),
-    ...nearby.map((p) => placeNews(db, p, place.state, false, apiKey)),
+    ...nearby.map((n) => placeNews(db, n.name, n.state, false, apiKey)),
   ]);
-  const articles = mergeArticles(lists);
+  const articles = mergeArticles(lists.map((list, i) => list.map((a) => ({ ...a, place: labels[i] }))));
 
-  return reply(200, { location, places: [place.city, ...nearby], articles }, origin);
+  return reply(200, { location, places: labels, articles }, origin);
 });
