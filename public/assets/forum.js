@@ -6,7 +6,9 @@
   var db = RV.db, state = RV.state;
   var $ = function (id) { return document.getElementById(id); };
 
-  var BASE_DOMAIN = 'localconnect.site';
+  // Member pages live on whichever address the site is on (localconnect.site, or randhawa.vip until the move is done).
+  var BASE_DOMAIN = /(^|\.)randhawa\.vip$/.test(location.hostname) ? 'randhawa.vip' : 'localconnect.site';
+  var suffix = document.querySelector('.slug-suffix'); if (suffix) suffix.textContent = '.' + BASE_DOMAIN;
   var CATEGORIES = {
     'general': 'General', 'recommendations': 'Recommendations', 'for-sale': 'For sale & free',
     'lost-found': 'Lost & found', 'safety': 'Safety', 'events': 'Events'

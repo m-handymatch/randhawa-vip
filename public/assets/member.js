@@ -18,7 +18,13 @@
 
   // Slug from the address (singh.localconnect.site -> singh). ?u=singh works for previews.
   var host = location.hostname.toLowerCase();
-  var m = host.match(/^([a-z0-9-]+)\.localconnect\.site$/);
+  var m = host.match(/^([a-z0-9-]+)\.(localconnect\.site|randhawa\.vip)$/);
+  var BASE = m ? m[2] : 'localconnect.site';
+  if (BASE !== 'localconnect.site') {
+    document.querySelectorAll('a[href^="https://localconnect.site"]').forEach(function (a) {
+      a.href = a.href.replace('https://localconnect.site', 'https://' + BASE);
+    });
+  }
   var slug = (m && m[1] !== 'www') ? m[1] : (new URLSearchParams(location.search).get('u') || '').toLowerCase();
 
   function missing() {
@@ -34,7 +40,7 @@
     var site = r.data;
     if (!site) { missing(); return; }
     document.title = site.title + ' · localconnect.site';
-    $('mp-address').textContent = site.slug + '.localconnect.site';
+    $('mp-address').textContent = site.slug + '.' + BASE;
     $('mp-title').textContent = site.title;
     $('mp-where').textContent = site.city ? 'Neighbor in ' + site.city + ', ' + site.state : 'Neighbor on localconnect.site';
     $('mp-about').textContent = site.about || ('Hi! I’m ' + site.title + (site.city ? ', a neighbor in ' + site.city : '') + '. Say hello on localconnect.site.');
@@ -59,7 +65,7 @@
           li.appendChild(el('p', 'post-body', p.body));
           var actions = el('div', 'post-actions');
           var rb = el('button', 'act', 'Replies'); rb.type = 'button';
-          var join = el('a', 'act', 'Reply on localconnect.site'); join.href = 'https://localconnect.site/#forum';
+          var join = el('a', 'act', 'Reply on localconnect.site'); join.href = 'https://' + BASE + '/#forum';
           actions.append(rb, join);
           li.appendChild(actions);
           var thread = el('ul', 'replies'); thread.hidden = true; li.appendChild(thread);
@@ -73,7 +79,7 @@
               reps.forEach(function (rep) {
                 var r2 = el('li', 'reply');
                 var meta = el('div', 'post-meta');
-                if (rep.author_slug) { var a = el('a', 'author', rep.author_name); a.href = 'https://' + rep.author_slug + '.localconnect.site/'; meta.appendChild(a); }
+                if (rep.author_slug) { var a = el('a', 'author', rep.author_name); a.href = 'https://' + rep.author_slug + '.' + BASE + '/'; meta.appendChild(a); }
                 else meta.appendChild(el('span', 'author', rep.author_name));
                 meta.append(' · ' + when(rep.created_at));
                 r2.append(meta, el('p', 'reply-body', rep.body));
