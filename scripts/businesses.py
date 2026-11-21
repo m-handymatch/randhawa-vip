@@ -51,3 +51,9 @@ with open("businesses.csv", "w", newline="") as f:
                     json.dumps(list(socials or []))[:500], round(conf or 0, 3), status or ""])
         out += 1
 print("businesses:", out)
+import collections
+rows_out = list(csv.DictReader(open("businesses.csv")))
+print("with email:", sum(1 for r in rows_out if r["email"]), " website:", sum(1 for r in rows_out if r["website"]),
+      " phone:", sum(1 for r in rows_out if r["phone"]))
+print("top cities:", collections.Counter(r["city"] for r in rows_out).most_common(12))
+print("top categories:", collections.Counter(r["category"] for r in rows_out).most_common(25))

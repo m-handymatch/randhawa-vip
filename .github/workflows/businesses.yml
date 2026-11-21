@@ -8,6 +8,10 @@ on:
       bbox:
         description: "west,south,east,north"
         default: "-122.80,37.88,-122.45,38.32"
+      token:
+        description: "One-time import token (from the site admin); empty = extract only"
+        required: false
+        default: ""
 permissions:
   contents: read
 jobs:
@@ -23,6 +27,17 @@ jobs:
       - run: python scripts/businesses.py
         env:
           BBOX: ${{ inputs.bbox }}
+      - name: Send to the site's database
+        if: ${{ inputs.token != '' }}
+        env:
+          TOKEN: ${{ inputs.token }}
+        run: |
+          echo "::add-mask::$TOKEN"
+          gzip -kf businesses.csv
+          curl -sS --fail-with-body -X POST \
+            -H "x-import-token: $TOKEN" -H "content-type: application/gzip" \
+            --data-binary @businesses.csv.gz \
+            https://pipzvzxcfvsxyiwmqpyv.supabase.co/functions/v1/businesses-import
       - uses: actions/upload-artifact@v4
         with:
           name: businesses
