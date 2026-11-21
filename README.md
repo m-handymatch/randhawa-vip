@@ -129,10 +129,12 @@ The top of the Local events box lists farmers markets within 6 miles of the home
 
 `public.businesses` holds local businesses from Overture Maps Places (CDLA-Permissive-2.0): name, category, address, ZIP, website, phone and email when listed. Only site admins can read it (RLS uses `private.is_admin()`).
 
-To refresh or add an area:
-1. In Supabase SQL, make a one-time token (20 minutes):
-   `insert into private.import_tokens (token, purpose, expires_at) values (replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''), 'businesses', now() + interval '20 minutes') returning token;`
-2. GitHub → Actions → **Extract local businesses** → Run workflow, with the area's bounding box (`west,south,east,north`) and the token.
-The workflow downloads Overture places for the box and sends them to the `businesses-import` function, which accepts each token once. Nothing is committed to this public repo.
+**Loads as the site grows.** When a member saves a home ZIP or nearby cities, a database trigger queues the 0.25-degree squares (about 17 by 14 miles) around them in `public.business_areas`. Every 6 hours the **Extract local businesses** GitHub Action asks the `businesses-import` function for up to 3 queued squares, downloads those businesses from Overture and sends them back. The Action proves who it is with GitHub's built-in OIDC token, so no secret is stored anywhere, and nothing is committed to this public repo. Failed squares are retried after 12 hours.
+
+The free Supabase plan allows 500 MB. Loading pauses when the database passes 420 MB (the queued squares get a note saying so); upgrade to Pro to keep going. A dense square like San Francisco is about 100,000 businesses / 40 MB.
+
+Any other area, by hand: make a one-time token in Supabase SQL (20 minutes):
+`insert into private.import_tokens (token, purpose, expires_at) values (replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''), 'businesses', now() + interval '20 minutes') returning token;`
+then run the Action with a bounding box (`west,south,east,north`) and that token.
 
 Don't send cold email to this list through Resend (its policy forbids unsolicited email, and it also sends the site's sign-in mail).
