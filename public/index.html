@@ -137,7 +137,10 @@
             <p class="about-credit" id="about-text-credit" hidden>Excerpt from <a id="about-wiki-credit" href="#" rel="noopener" target="_blank">Wikipedia</a>, shared under <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener license" target="_blank">CC BY-SA 4.0</a>.</p>
           </div>
           <div class="about-map" id="about-map" hidden>
-            <iframe id="about-map-frame" title="Map of your ZIP code" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            <div class="map-frame">
+              <iframe id="about-map-frame" title="Map of your ZIP code" loading="lazy" tabindex="-1" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              <a class="map-open" id="about-map-open" href="#" target="_blank" rel="noopener" aria-label="Open a larger map in a new tab"></a>
+            </div>
             <p class="about-credit">Map &copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap contributors</a> &middot; <a id="about-map-link" href="#" rel="noopener" target="_blank">Larger map</a></p>
           </div>
         </article>

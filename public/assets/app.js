@@ -276,7 +276,7 @@
       var d = 0.035, lat = Number(c.lat), lon = Number(c.lon);
       var bbox = [lon - d * 1.4, lat - d, lon + d * 1.4, lat + d].map(function (n) { return n.toFixed(5); }).join(',');
       $('about-map-frame').src = 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + lat.toFixed(5) + ',' + lon.toFixed(5);
-      $('about-map-link').href = 'https://www.openstreetmap.org/?mlat=' + lat.toFixed(5) + '&mlon=' + lon.toFixed(5) + '#map=13/' + lat.toFixed(5) + '/' + lon.toFixed(5);
+      $('about-map-open').href = $('about-map-link').href = 'https://www.openstreetmap.org/?mlat=' + lat.toFixed(5) + '&mlon=' + lon.toFixed(5) + '#map=13/' + lat.toFixed(5) + '/' + lon.toFixed(5);
       $('about-map').hidden = false; card.classList.remove('no-map');
       $('about').hidden = false;
     });
