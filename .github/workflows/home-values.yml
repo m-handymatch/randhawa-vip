@@ -1,0 +1,30 @@
+# Refreshes public/data/home-values/*.json from Zillow Research once a month.
+# Zillow publishes new ZHVI numbers mid-month; this runs on the 20th.
+name: Refresh home values
+on:
+  schedule:
+    - cron: "17 9 20 * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/home_values.py
+      - name: Commit if changed
+        run: |
+          if [ -n "$(git status --porcelain public/data/home-values)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add public/data/home-values
+            git commit -m "Refresh home values from Zillow Research"
+            git push
+          else
+            echo "No changes"
+          fi
