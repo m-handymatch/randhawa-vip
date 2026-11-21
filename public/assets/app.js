@@ -324,16 +324,23 @@
       .then(function (r) { return r.data; }).catch(function () { return null; });
   }
 
-  // The city intro fills the card down to the links row: as many whole lines
-  // as fit next to the photo and the weather/home-page column.
+  // The city text fills the card: it wraps beside and under the photo, and is
+  // cut at the last whole word that fits above the links row.
+  var aboutFull = '';
   function fitExtract() {
-    var el = $('about-extract');
-    if (!el) return;
-    el.style.webkitLineClamp = ''; el.style.lineClamp = ''; el.style.maxHeight = '';
-    var lh = parseFloat(getComputedStyle(el).lineHeight) || 22;
-    var n = Math.max(2, Math.floor((el.clientHeight + 1) / lh));
-    el.style.webkitLineClamp = String(n); el.style.lineClamp = String(n);
-    el.style.maxHeight = (n * lh) + 'px';
+    var el = $('about-extract'), body = $('about-body');
+    if (!el || !body || !aboutFull) return;
+    // Fits when the text ends above the bottom of the space (the photo may be taller).
+    var fits = function () { return el.getBoundingClientRect().bottom <= body.getBoundingClientRect().bottom + 1; };
+    el.textContent = aboutFull;
+    if (fits()) return;
+    var words = aboutFull.split(' '), lo = 0, hi = words.length;
+    while (lo < hi) {
+      var mid = Math.ceil((lo + hi) / 2);
+      el.textContent = words.slice(0, mid).join(' ') + '\u2026';
+      if (fits()) lo = mid; else hi = mid - 1;
+    }
+    el.textContent = words.slice(0, lo).join(' ').replace(/[,;:]$/, '') + '\u2026';
   }
   if (window.ResizeObserver) {
     new ResizeObserver(function () { fitExtract(); }).observe(document.querySelector('.about-card'));
@@ -357,7 +364,7 @@
     wikiCity(city, place.state).then(function (pg) {
       if (token !== aboutToken) return;
       if (!pg) {
-        $('about-extract').textContent = '';
+        aboutFull = ''; $('about-extract').textContent = '';
         $('about-links').innerHTML = '';
         $('about-text-credit').hidden = true;
         $('about-photo').hidden = true; card.classList.add('no-photo');
@@ -370,7 +377,7 @@
         line = line.trim();
         return line && /[.!?]["')\]]?$/.test(line);
       }).join(' ');
-      $('about-extract').textContent = text.replace(/\s*\([^()]*\)/, '').replace(/\s+/g, ' ').trim();
+      aboutFull = text.replace(/\s*\([^()]*\)/, '').replace(/\s+/g, ' ').trim();
       fitExtract();
       var wikiUrl = safeUrl(pg.fullurl) || 'https://en.wikipedia.org/wiki/' + encodeURIComponent(pg.title.replace(/ /g, '_'));
       $('about-wiki-credit').href = wikiUrl;
@@ -386,7 +393,7 @@
           links.appendChild(cityLink);
         }
         renderCounty(pg.pageprops && pg.pageprops.wikibase_item, token);
-        if (!photo) { $('about-photo').hidden = true; card.classList.add('no-photo'); return; }
+        if (!photo) { $('about-photo').hidden = true; card.classList.add('no-photo'); fitExtract(); return; }
         var img = $('about-img');
         img.src = photo.src; img.alt = photo.alt || 'Photo of ' + city;
         var cap = $('about-credit'); cap.innerHTML = '';
@@ -395,6 +402,7 @@
         cap.append(', ');
         cap.appendChild(photo.licenseUrl ? link(photo.licenseUrl, photo.license) : document.createTextNode(photo.license));
         $('about-photo').hidden = false; card.classList.remove('no-photo');
+        img.onload = fitExtract; fitExtract();
       });
     }).catch(function () { /* the card just shows what loaded */ });
   }
