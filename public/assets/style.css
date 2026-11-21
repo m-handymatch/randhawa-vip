@@ -696,4 +696,17 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 .markets-more:focus-visible { outline: 3px solid var(--marigold); outline-offset: 2px; border-radius: 4px; }
 .markets .markets-credit { margin-top: 6px; font-size: 12px; color: var(--ink-soft); }
 .markets-credit a { color: var(--forest); }
-.markets + .loading + .events, .markets:not([hidden]) ~ .events { margin-top: 14px; }
+.markets .markets-warn { display: flex; align-items: flex-start; gap: 6px; margin-top: 8px; padding: 6px 10px; border-radius: 8px; background: #FFF6DA; border: 1px solid #F0D98A; font-size: 13px; font-weight: 600; line-height: 1.35; color: #6B4E00; }
+.markets-warn svg { flex: 0 0 16px; width: 16px; height: 16px; margin-top: 1px; fill: none; stroke: #A87400; stroke-width: 2; stroke-linecap: round; }
+
+/* ---------- Events box (blue, matches the farmers market box) ---------- */
+.evbox { margin: 14px 0 4px; padding: 14px 16px 6px; background: #E7F0FA; border: 1px solid #C5D8EE; border-radius: 14px; }
+.evbox-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.evbox-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--display); font-size: 17px; font-weight: 700; color: var(--ink); }
+.evbox-head svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.evbox-count { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.evbox .events { margin-top: 6px; }
+.evbox .events .event { border-top: 1px solid #C5D8EE; border-bottom: 0; padding: 10px 0; }
+.evbox .events .event:first-child { padding-top: 10px; }
+.evbox .loading, .evbox .empty { margin: 8px 0 10px; padding: 10px 0; background: none; }
+.evbox .event-date { border-color: #C5D8EE; }

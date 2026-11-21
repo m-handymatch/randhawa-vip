@@ -747,6 +747,7 @@
     renderOpenHouses();
     document.dispatchEvent(new CustomEvent('rv:area-changed'));
     $('events').innerHTML = ''; $('events-empty').hidden = true; $('events-loading').hidden = false;
+    $('events-count').textContent = '';
     if (!state.profile || !state.profile.zip) {
       $('events-loading').hidden = true;
       eventsEmpty(['Add your ZIP code to see events near you.']);
@@ -762,6 +763,7 @@
       if (r.data && r.data.configured === false) { eventsEmpty(['Events are almost ready.', 'The events service still needs its key.']); return; }
       if (!events.length) { eventsEmpty(['No upcoming events found nearby yet.', 'Check back tomorrow.']); return; }
       renderEvents(events);
+      $('events-count').textContent = events.length + ' upcoming';
     });
   }
 
