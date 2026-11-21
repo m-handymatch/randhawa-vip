@@ -788,3 +788,13 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
 .about-body { flex: 1 1 0; min-height: 120px; overflow: hidden; }
 .about-text #about-extract { display: block; -webkit-line-clamp: none; line-clamp: none; max-height: none; overflow: visible; flex: none; min-height: 0; max-width: none; margin-top: 4px; }
 .about-body h2 { margin: 0; }
+
+/* ---------- Full city list on hover for the panel subtitles ---------- */
+.panel-head { position: relative; }
+.panel-head .note[data-full] { cursor: default; }
+.panel-head .note[data-full]:hover::after, .panel-head .note[data-full]:focus::after {
+  content: attr(data-full); position: absolute; z-index: 30; left: 16px; right: 16px; top: calc(100% - 6px);
+  padding: 8px 12px; border-radius: 10px; background: var(--ink); color: #fff;
+  font-size: 13px; line-height: 1.45; white-space: normal; box-shadow: 0 8px 24px rgba(20, 40, 75, .25);
+}
+.panel-head .note[data-full]:focus-visible { outline: 2px solid var(--marigold); outline-offset: 2px; border-radius: 4px; }

@@ -347,6 +347,15 @@
   }
   window.addEventListener('resize', fitExtract);
 
+  // Panel subtitles ("From Novato, San Rafael and ...") are cut to one line;
+  // hovering or focusing shows the full list in a small popup.
+  function fullNote(el) {
+    el.dataset.full = el.textContent;
+    el.removeAttribute('title');
+    el.tabIndex = 0;
+    el.setAttribute('aria-label', el.textContent);
+  }
+
   function renderAbout(place) {
     var token = ++aboutToken;
     var card = document.querySelector('.about-card');
@@ -459,7 +468,7 @@
   function showNews(places, articles) {
     state.places = places;
     $('news-note').textContent = places.length > 1 ? 'From ' + listJoin(places) + '.' : 'Headlines from local and regional news.';
-    $('news-note').title = $('news-note').textContent;
+    fullNote($('news-note'));
     $('news-loading').hidden = true; $('news-empty').hidden = true;
     renderStories(articles);
   }
@@ -699,7 +708,7 @@
     var list = $('sales-list'); list.innerHTML = '';
     var names = cities.map(function (c) { return c.city; });
     $('sales-note').textContent = names.length ? 'From ' + listJoin(names) + '.' : 'This week\u2019s sales on each site.';
-    $('sales-note').title = $('sales-note').textContent;
+    fullNote($('sales-note'));
     cities.forEach(function (c) {
       var li = document.createElement('li'); li.className = 'oh-row';
       var name = document.createElement('span'); name.className = 'oh-city'; name.textContent = c.city;
@@ -946,7 +955,7 @@
   }
   function showEventsNote(places) {
     $('events-note').textContent = places.length ? 'From ' + listJoin(places) + '.' : 'Around you and your nearby cities.';
-    $('events-note').title = $('events-note').textContent;
+    fullNote($('events-note'));
   }
   function showEvents(places, events) {
     var today = new Date(); var iso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
