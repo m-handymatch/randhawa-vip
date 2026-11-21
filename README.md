@@ -43,7 +43,11 @@ const { location, articles } = await res.json();
 - Signed out: sign up (first name, ZIP, email, password) or sign in. The ZIP is checked as you type and shows the city.
 - Signed in: a street of houses with yours lit up and your ZIP on the mailbox, a greeting, your neighborhood, a box to change your ZIP, and local headlines that link to the original stories.
 
-### Publish it (GitHub Pages)
+### Publish it (Cloudflare Pages, recommended)
+
+Workers & Pages → Create → Pages → Import an existing Git repository → `m-handymatch/randhawa-vip`, framework None, build command empty, output directory `/`. Add the variable `ALLOWED_IPS`, then Custom domains → `randhawa.vip`.
+
+### Or publish with GitHub Pages
 
 1. Repo **Settings → Pages** → Deploy from a branch → `main`, `/ (root)` → Save.
 2. Site appears at `https://m-handymatch.github.io/randhawa-vip/`.
@@ -51,7 +55,8 @@ const { location, articles } = await res.json();
 
 ### Private: only your IP (Cloudflare)
 
-- Website: Cloudflare **Security → WAF → Custom rules** → block when `not ip.src in {YOUR.IP}`.
+- Website: `functions/_middleware.js` lets in only the IPs in the Cloudflare Pages variable `ALLOWED_IPS` (comma-separated). Empty = everyone blocked. Covers randhawa.vip and the *.pages.dev address.
+- Optional extra layer: Cloudflare **Security → Security rules → Create rule → Custom rules**, block when `not ip.src in {YOUR.IP}`.
 - News function: Supabase secret `ALLOWED_IPS` (comma-separated). Unset = open to everyone.
 
 To use the randhawa.vip domain later: add it under Settings → Pages → Custom domain, point the DNS records GitHub shows, then update the Site URL in Supabase.
