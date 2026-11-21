@@ -212,7 +212,7 @@
       if (i >= titles.length) return Promise.resolve(null);
       return getJSON('https://en.wikipedia.org/w/api.php?' + qs({
         action: 'query', format: 'json', formatversion: 2, origin: '*', redirects: 1, titles: titles[i],
-        prop: 'extracts|pageimages|pageprops|info', exintro: 1, explaintext: 1, exsentences: 3,
+        prop: 'extracts|pageimages|pageprops|info', exintro: 1, explaintext: 1, exsentences: 2,
         piprop: 'name', pilicense: 'free', ppprop: 'wikibase_item|disambiguation', inprop: 'url'
       })).then(function (r) {
         var pg = r && r.query && r.query.pages && r.query.pages[0];
