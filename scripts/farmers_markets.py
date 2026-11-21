@@ -41,6 +41,22 @@ def rows_from(ctype, data):
     return list(csv.DictReader(io.StringIO(txt)))
 
 
+ADDR = re.compile(r",\s*([^,]+?),\s*([A-Za-z .]+?)\s+(\d{5})(?:-\d{4})?\s*$")
+STATES = {n.lower(): c for n, c in [
+    ("Alabama","AL"),("Alaska","AK"),("Arizona","AZ"),("Arkansas","AR"),("California","CA"),
+    ("Colorado","CO"),("Connecticut","CT"),("Delaware","DE"),("District of Columbia","DC"),
+    ("Florida","FL"),("Georgia","GA"),("Hawaii","HI"),("Idaho","ID"),("Illinois","IL"),
+    ("Indiana","IN"),("Iowa","IA"),("Kansas","KS"),("Kentucky","KY"),("Louisiana","LA"),
+    ("Maine","ME"),("Maryland","MD"),("Massachusetts","MA"),("Michigan","MI"),("Minnesota","MN"),
+    ("Mississippi","MS"),("Missouri","MO"),("Montana","MT"),("Nebraska","NE"),("Nevada","NV"),
+    ("New Hampshire","NH"),("New Jersey","NJ"),("New Mexico","NM"),("New York","NY"),
+    ("North Carolina","NC"),("North Dakota","ND"),("Ohio","OH"),("Oklahoma","OK"),("Oregon","OR"),
+    ("Pennsylvania","PA"),("Rhode Island","RI"),("South Carolina","SC"),("South Dakota","SD"),
+    ("Tennessee","TN"),("Texas","TX"),("Utah","UT"),("Vermont","VT"),("Virginia","VA"),
+    ("Washington","WA"),("West Virginia","WV"),("Wisconsin","WI"),("Wyoming","WY"),
+    ("Puerto Rico","PR"),("Guam","GU"),("Virgin Islands","VI")]}
+
+
 def pick(row, *keys):
     low = {str(k).lower().strip(): v for k, v in row.items()}
     for k in keys:
@@ -70,32 +86,37 @@ def main():
         sys.exit(1)
     rows = rows_from(ctype, data)
     print("rows", len(rows))
-    if rows:
-        print("columns", list(rows[0].keys()))
-        ca = next((r for r in rows if "California" in str(r.get("location_address"))), rows[0])
-        print("sample", json.dumps({k: v for k, v in ca.items() if v not in (None, "", "0")})[:4000])
     by_state = {}
     for r in rows:
         try:
-            lat = float(pick(r, "location_y", "latitude", "y", "lat"))
-            lon = float(pick(r, "location_x", "longitude", "x", "lon", "lng"))
+            lat = float(pick(r, "location_y"))
+            lon = float(pick(r, "location_x"))
         except ValueError:
             continue
         if not (-90 < lat < 90 and -180 < lon < 180) or (lat == 0 and lon == 0):
             continue
-        st = pick(r, "location_state", "state").upper()[:2]
-        if len(st) != 2:
+        addr = clean(pick(r, "location_address"), 200)
+        m_ = ADDR.search(addr)
+        if not m_:
             continue
+        city, state, zc = m_.group(1).strip(), m_.group(2).strip().lower(), m_.group(3)
+        st = STATES.get(state) or (state.upper() if len(state) == 2 else "")
+        if not st:
+            continue
+        street = addr[:m_.start()].strip(" ,")
+        pay = pick(r, "fnap") + pick(r, "acceptedpayment")
         m = {
-            "name": clean(pick(r, "listing_name", "market_name", "marketname", "name"), 120),
-            "street": clean(pick(r, "location_street", "street", "address"), 140),
-            "city": clean(pick(r, "location_city", "city"), 60),
-            "zip": pick(r, "location_zipcode", "zipcode", "zip")[:5],
+            "id": pick(r, "listing_id"),
+            "name": clean(pick(r, "listing_name"), 120),
+            "street": street[:140],
+            "city": city[:60],
+            "zip": zc,
             "lat": round(lat, 5), "lon": round(lon, 5),
-            "when": clean(pick(r, "season1date", "operating_times", "season", "season_dates"), 160),
-            "hours": clean(pick(r, "season1time", "hours", "schedule"), 200),
-            "site": pick(r, "media_website", "website", "url"),
-            "updated": pick(r, "updatetime", "update_date", "updated")[:10],
+            "about": clean(pick(r, "listing_desc"), 280),
+            "where": clean(pick(r, "location_site"), 80).strip("; ").replace(";", ", "),
+            "ebt": bool(re.search(r"SNAP|EBT", pay)),
+            "organic": "Organic" in pick(r, "specialproductionmethods"),
+            "updated": pick(r, "update_time")[:10],
         }
         if not m["name"]:
             continue
