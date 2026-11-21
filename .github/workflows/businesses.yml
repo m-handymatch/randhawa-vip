@@ -1,34 +1,49 @@
-# Extracts local businesses from Overture Maps Places for a bounding box.
-# Run by hand (Actions -> Extract local businesses -> Run workflow). The CSV is
-# kept as a workflow artifact for 7 days and is NOT committed to this public repo.
+# Loads local businesses (Overture Maps Places) into the site's database.
+# - Every 6 hours: loads the areas queued for members (home ZIP + nearby cities).
+# - By hand: Run workflow, optionally with a bounding box + one-time token.
+# Nothing is committed to this public repo.
 name: Extract local businesses
 on:
+  schedule:
+    - cron: "23 */6 * * *"
   workflow_dispatch:
     inputs:
       bbox:
-        description: "west,south,east,north"
-        default: "-122.80,37.88,-122.45,38.32"
+        description: "Optional: west,south,east,north (needs a token). Empty = work the member queue"
+        required: false
+        default: ""
       token:
-        description: "One-time import token (from the site admin); empty = extract only"
+        description: "One-time import token (only with a bounding box)"
         required: false
         default: ""
 permissions:
   contents: read
+  id-token: write
+concurrency:
+  group: businesses
+  cancel-in-progress: false
 jobs:
-  extract:
+  load:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install overturemaps duckdb
-      - run: python scripts/businesses.py
+      - name: Load queued member areas
+        if: ${{ github.event_name == 'schedule' || inputs.bbox == '' }}
+        env:
+          AREAS: "3"
+        run: python scripts/business_queue.py
+      - name: Extract a bounding box
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.bbox != '' }}
         env:
           BBOX: ${{ inputs.bbox }}
-      - name: Send to the site's database
-        if: ${{ inputs.token != '' }}
+        run: python scripts/businesses.py
+      - name: Send it with the one-time token
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.bbox != '' && inputs.token != '' }}
         env:
           TOKEN: ${{ inputs.token }}
         run: |
@@ -38,8 +53,3 @@ jobs:
             -H "x-import-token: $TOKEN" -H "content-type: application/gzip" \
             --data-binary @businesses.csv.gz \
             https://pipzvzxcfvsxyiwmqpyv.supabase.co/functions/v1/businesses-import
-      - uses: actions/upload-artifact@v4
-        with:
-          name: businesses
-          path: businesses.csv
-          retention-days: 7
