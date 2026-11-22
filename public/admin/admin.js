@@ -187,11 +187,12 @@
         var tr = document.createElement('tr');
         var who = document.createElement('td');
         var name = document.createElement('div'); name.className = 'svc-name'; name.textContent = v.customer; who.appendChild(name);
+        if (v.invoice_number) { var no = document.createElement('div'); no.className = 'inv-sub'; no.textContent = '#' + v.invoice_number; who.appendChild(no); }
         if (v.customer_email) { var em = document.createElement('div'); em.className = 'inv-sub'; em.textContent = v.customer_email; who.appendChild(em); }
         var what = document.createElement('td'); what.textContent = v.description || '';
         if (v.recurring) { var rc = document.createElement('div'); rc.className = 'inv-sub'; rc.textContent = 'Monthly'; what.appendChild(rc); }
         var am = document.createElement('td'); am.className = 'num'; am.textContent = money(amt);
-        if (v.status === 'paid' && v.fee) { var fe = document.createElement('div'); fe.className = 'inv-sub'; fe.textContent = money(v.fee) + ' fee'; am.appendChild(fe); }
+        if (v.status === 'paid' && v.fee) { var fe = document.createElement('div'); fe.className = 'inv-sub'; fe.textContent = money(v.fee) + (v.fee_estimated ? ' fee (est.)' : ' fee'); am.appendChild(fe); }
         var sent = document.createElement('td'); sent.textContent = fmtDate(v.sent_on);
         var due = document.createElement('td'); due.textContent = fmtDate(v.due_on);
         var st = document.createElement('td'), tag = document.createElement('span');
@@ -234,6 +235,95 @@
       });
     });
   }
+  // ---------- Send invoices through PayPal (paypal-invoice function) ----------
+  // Suggested prices; change them on each invoice as needed.
+  var ITEMS = [
+    { name: 'City sponsor (monthly)', description: 'Your business featured as the sponsor of one city on localconnect.site for one month.', amount: 100 },
+    { name: 'Featured event listing', description: 'Your event pinned at the top of Local events for its city until the event date.', amount: 25 },
+    { name: 'Featured garage or estate sale', description: 'Your sale pinned at the top of Garage & estate sales for one week.', amount: 10 },
+    { name: 'Business listing (monthly)', description: 'An enhanced business listing with photos and a contact link for one month.', amount: 15 },
+    { name: 'Other', description: '', amount: 0 }
+  ];
+  function callPaypal(body) {
+    return db.functions.invoke('paypal-invoice', { body: body }).then(function (r) {
+      if (r.error) {
+        return (r.error.context && r.error.context.json ? r.error.context.json() : Promise.resolve(null)).then(function (j) {
+          throw new Error((j && j.error) || r.error.message);
+        });
+      }
+      return r.data;
+    });
+  }
+  function itemRow(preset) {
+    var row = document.createElement('div'); row.className = 'send-item';
+    var sel = document.createElement('select'); sel.setAttribute('aria-label', 'Item');
+    ITEMS.forEach(function (it, i) { var o = document.createElement('option'); o.value = i; o.textContent = it.name; sel.appendChild(o); });
+    var name = document.createElement('input'); name.maxLength = 200; name.setAttribute('aria-label', 'Item name');
+    var desc = document.createElement('input'); desc.maxLength = 1000; desc.placeholder = 'Description (optional)';
+    var qty = document.createElement('input'); qty.type = 'number'; qty.min = '1'; qty.step = '1'; qty.value = '1';
+    var price = document.createElement('input'); price.type = 'number'; price.min = '0.01'; price.step = '0.01';
+    function lab(text, el) { var l = document.createElement('label'); l.append(text, el); return l; }
+    function apply() {
+      var it = ITEMS[Number(sel.value)];
+      name.value = it.name === 'Other' ? '' : it.name;
+      desc.value = it.description; price.value = it.amount || '';
+      name.hidden = it.name !== 'Other'; sumUp();
+    }
+    sel.addEventListener('change', apply);
+    [qty, price].forEach(function (el) { el.addEventListener('input', sumUp); });
+    var pick = lab('Item', sel); pick.appendChild(name); name.placeholder = 'What is it for?';
+    var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'rm'; rm.textContent = '\u00d7'; rm.setAttribute('aria-label', 'Remove item');
+    rm.addEventListener('click', function () { if ($('send-items').children.length > 1) { row.remove(); sumUp(); } });
+    row.append(pick, lab('Description', desc), lab('Qty', qty), lab('Price ($)', price), rm);
+    row.read = function () { return { name: name.value.trim(), description: desc.value.trim(), quantity: Number(qty.value) || 1, amount: Number(price.value) || 0 }; };
+    sel.value = String(preset || 0); apply();
+    return row;
+  }
+  function sumUp() {
+    var total = 0;
+    Array.prototype.forEach.call($('send-items').children, function (r) { if (r.read) { var it = r.read(); total += it.quantity * it.amount; } });
+    $('send-total').textContent = money(Math.round(total * 100) / 100);
+  }
+  function resetSendForm() {
+    var f = $('send-form'); f.reset();
+    f.due_on.value = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+    $('send-items').innerHTML = ''; $('send-items').appendChild(itemRow(0)); sumUp();
+  }
+  $('add-item').addEventListener('click', function () { $('send-items').appendChild(itemRow(1)); sumUp(); });
+  $('send-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, btn = $('send-btn');
+    var items = Array.prototype.map.call($('send-items').children, function (r) { return r.read(); })
+      .filter(function (it) { return it.name && it.amount > 0; });
+    if (!items.length) { $('send-hint').textContent = 'Add at least one item with a price.'; return; }
+    var total = items.reduce(function (s, it) { return s + it.quantity * it.amount; }, 0);
+    if (!window.confirm('Send a ' + money(total) + ' invoice to ' + f.email.value.trim() + ' through PayPal now?')) return;
+    btn.disabled = true; $('send-hint').textContent = 'Sending through PayPal\u2026';
+    callPaypal({
+      action: 'send', customer: f.customer.value.trim(), email: f.email.value.trim(), due_on: f.due_on.value,
+      note: f.note.value.trim(), recurring: f.recurring.checked, items: items
+    }).then(function (d) {
+      $('send-hint').textContent = 'Sent invoice #' + d.invoice_number + ' for ' + money(Number(d.total || total)) + '.' + (d.warning ? ' ' + d.warning : '');
+      resetSendForm(); loadInvoices();
+    }).catch(function (err) {
+      $('send-hint').textContent = 'Not sent: ' + err.message;
+    }).finally(function () { btn.disabled = false; });
+  });
+  function syncPaypal(quiet) {
+    if (!quiet) $('send-hint').textContent = 'Checking PayPal\u2026';
+    return callPaypal({ action: 'sync' }).then(function (d) {
+      if (!quiet || d.paid) $('send-hint').textContent = d.paid ? d.paid + ' invoice' + (d.paid === 1 ? '' : 's') + ' paid since last check; added to Business money.' : 'Checked ' + d.checked + ' open invoice' + (d.checked === 1 ? '' : 's') + '. Nothing new.';
+      if (d.paid || d.cancelled) { loadInvoices(); loadMoney(); }
+    }).catch(function (err) { if (!quiet) $('send-hint').textContent = 'Couldn\u2019t check PayPal: ' + err.message; });
+  }
+  $('inv-sync').addEventListener('click', function () { syncPaypal(false); });
+  function setupPaypal() {
+    return callPaypal({ action: 'status' }).then(function (d) {
+      $('inv-setup').hidden = !!d.configured; $('send-form').hidden = !d.configured; $('inv-sync').hidden = !d.configured;
+      if (d.configured) { resetSendForm(); syncPaypal(true); }
+    }).catch(function () { $('inv-setup').hidden = false; });
+  }
+
   $('inv-form').sent_on.value = new Date().toISOString().slice(0, 10);
   $('inv-form').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -288,7 +378,7 @@
       $('app').hidden = false;
       return Promise.all([
         db.from('admin_ledger').select('*').order('sort').then(function (res) { ledger = res.data || []; renderLedger(); }),
-        loadNext(), loadStats(), loadMoney(), loadInvoices()
+        loadNext(), loadStats(), loadMoney(), loadInvoices(), setupPaypal()
       ]);
     });
   }

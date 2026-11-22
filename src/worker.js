@@ -109,7 +109,9 @@ export default {
     // While SITE_IS_PUBLIC is false, only the IPs in LOCK_TO_IPS (or the older ALLOWED_IPS) get in;
     // with neither set, everyone is blocked.
     const lock = String(env.LOCK_TO_IPS || env.ALLOWED_IPS || '').trim();
-    if (!SITE_IS_PUBLIC && !isAllowed(visitorIp, lock)) {
+    // A few public files stay reachable while the site is private (PayPal loads the invoice logo).
+    const PUBLIC_FILES = ['/assets/invoice-logo.png'];
+    if (!SITE_IS_PUBLIC && !PUBLIC_FILES.includes(new URL(request.url).pathname) && !isAllowed(visitorIp, lock)) {
       return new Response(privatePage(visitorIp), {
         status: 403,
         headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },

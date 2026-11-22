@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,600;6..72,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/admin/admin.css?v=4">
+  <link rel="stylesheet" href="/admin/admin.css?v=5">
   <link rel="icon" href="/assets/favicon-64.png" type="image/png">
 </head>
 <body>
@@ -130,8 +130,37 @@
         </table>
       </div>
       <p class="muted inv-empty" id="inv-empty">No invoices yet. Create one in PayPal, then record it here.</p>
+      <div class="inv-send" id="inv-send">
+        <div class="inv-send-head">
+          <h3>Send a new invoice</h3>
+          <button type="button" class="btn-quiet" id="inv-sync" hidden>Check PayPal for payments</button>
+        </div>
+        <div class="inv-setup" id="inv-setup" hidden>
+          <p><strong>Connect PayPal once to send invoices from here.</strong></p>
+          <ol>
+            <li>Go to <a href="https://developer.paypal.com/dashboard/applications/live" target="_blank" rel="noopener">developer.paypal.com</a>, sign in with your PayPal business login, choose <b>Apps &amp; Credentials</b>, switch to <b>Live</b>, and click <b>Create App</b> (name it "localconnect invoices").</li>
+            <li>Copy the <b>Client ID</b> and the <b>Secret</b>.</li>
+            <li>In <a href="https://supabase.com/dashboard/project/pipzvzxcfvsxyiwmqpyv/functions/secrets" target="_blank" rel="noopener">Supabase &gt; Edge Functions &gt; Secrets</a>, add <code>PAYPAL_CLIENT_ID</code> and <code>PAYPAL_CLIENT_SECRET</code> with those values.</li>
+            <li>Reload this page.</li>
+          </ol>
+          <p class="muted">Until then, create invoices in PayPal and record them below.</p>
+        </div>
+        <form id="send-form" class="send-form" hidden>
+          <label>Customer or business <input name="customer" required maxlength="120" placeholder="e.g. Novato Realty"></label>
+          <label>Customer email <input name="email" type="email" required maxlength="200"></label>
+          <label>Due date <input name="due_on" type="date" required></label>
+          <div class="send-items" id="send-items"></div>
+          <button type="button" class="linkbtn add-item" id="add-item">+ Add another item</button>
+          <label class="wide">Note to customer <textarea name="note" rows="2" maxlength="1000" placeholder="Thank you for supporting your neighbors on localconnect.site. Questions? Email support@localconnect.site."></textarea></label>
+          <label class="check"><input name="recurring" type="checkbox"> Monthly sponsor (I'll send it again each month)</label>
+          <div class="send-total">Total <span id="send-total">$0</span></div>
+          <button type="submit" class="btn" id="send-btn">Send invoice with PayPal</button>
+        </form>
+        <p class="hint" id="send-hint" role="status"></p>
+      </div>
+
       <details class="inv-add">
-        <summary>Record an invoice</summary>
+        <summary>Record an invoice sent some other way</summary>
         <form id="inv-form" class="inv-form">
           <label>Customer <input name="customer" required maxlength="120" placeholder="e.g. Novato Realty"></label>
           <label>Customer email <input name="customer_email" type="email" maxlength="200"></label>
@@ -150,6 +179,6 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="/admin/admin.js?v=4"></script>
+<script src="/admin/admin.js?v=5"></script>
 </body>
 </html>
