@@ -875,7 +875,7 @@
     var btn = $('hp-btn'), help = $('hp-help');
     if (!btn || !help) return;
     var ua = navigator.userAgent;
-    var mine = /Edg\//.test(ua) ? 'edge' : /Firefox\//.test(ua) ? 'firefox' :
+    var mine = /Edg[A]?\//.test(ua) ? 'edge' : /Firefox\//.test(ua) ? 'firefox' : /Android/.test(ua) ? 'android' :
       (/Safari\//.test(ua) && !/Chrome\/|Chromium\//.test(ua)) ? 'safari' : 'chrome';
     function pick(name) {
       help.querySelectorAll('[data-hp]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.hp === name)); });
