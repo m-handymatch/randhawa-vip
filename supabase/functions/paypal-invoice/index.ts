@@ -29,7 +29,8 @@ const SECRET = Deno.env.get("PAYPAL_CLIENT_SECRET") ?? "";
 // What every invoice says (same wording as the PayPal template).
 const NOTE = "Thank you for supporting your neighbors on localconnect.site. Questions? Email support@localconnect.site.";
 const TERMS = "Payment is due by the date shown. Sponsorships run for the period listed on this invoice and renew only if invoiced again. You can pay by PayPal, card, or bank transfer (Pay by Bank). Connecting Neighbors, Novato, CA.";
-const LOGO = "https://randhawa.vip/assets/invoice-logo.png";
+// Served from the public GitHub repo, since the site itself is private for now.
+const LOGO = "https://raw.githubusercontent.com/m-handymatch/randhawa-vip/main/public/assets/invoice-logo.png";
 const WEBSITE = "https://localconnect.site";
 
 async function token(): Promise<string> {
