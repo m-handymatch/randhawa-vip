@@ -167,6 +167,91 @@
       });
   });
 
+  // ---------- Invoices (sent from PayPal, tracked here) ----------
+  function fmtDate(d) {
+    return d ? new Date(d + 'T12:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  }
+  function linkBtn(text, fn) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn'; b.textContent = text;
+    b.addEventListener('click', fn); return b;
+  }
+  function loadInvoices() {
+    return db.from('admin_invoices').select('*').order('sent_on', { ascending: false }).order('id', { ascending: false }).then(function (r) {
+      var rows = r.data || [], body = $('inv-list'), today = new Date().toISOString().slice(0, 10), year = today.slice(0, 4);
+      var open = 0, paid = 0, fees = 0;
+      body.innerHTML = '';
+      rows.forEach(function (v) {
+        var amt = Number(v.amount);
+        if (v.status === 'sent') open += amt;
+        if (v.status === 'paid' && (v.paid_on || '').slice(0, 4) === year) { paid += amt; fees += Number(v.fee || 0); }
+        var tr = document.createElement('tr');
+        var who = document.createElement('td');
+        var name = document.createElement('div'); name.className = 'svc-name'; name.textContent = v.customer; who.appendChild(name);
+        if (v.customer_email) { var em = document.createElement('div'); em.className = 'inv-sub'; em.textContent = v.customer_email; who.appendChild(em); }
+        var what = document.createElement('td'); what.textContent = v.description || '';
+        if (v.recurring) { var rc = document.createElement('div'); rc.className = 'inv-sub'; rc.textContent = 'Monthly'; what.appendChild(rc); }
+        var am = document.createElement('td'); am.className = 'num'; am.textContent = money(amt);
+        if (v.status === 'paid' && v.fee) { var fe = document.createElement('div'); fe.className = 'inv-sub'; fe.textContent = money(v.fee) + ' fee'; am.appendChild(fe); }
+        var sent = document.createElement('td'); sent.textContent = fmtDate(v.sent_on);
+        var due = document.createElement('td'); due.textContent = fmtDate(v.due_on);
+        var st = document.createElement('td'), tag = document.createElement('span');
+        var overdue = v.status === 'sent' && v.due_on && v.due_on < today;
+        tag.className = 'inv-status ' + (overdue ? 'overdue' : v.status);
+        tag.textContent = overdue ? 'Overdue' : v.status === 'paid' ? 'Paid ' + fmtDate(v.paid_on) : v.status.charAt(0).toUpperCase() + v.status.slice(1);
+        st.appendChild(tag);
+        var act = document.createElement('td'); act.className = 'inv-actions';
+        if (v.paypal_url) { var a = document.createElement('a'); a.href = v.paypal_url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'PayPal'; act.appendChild(a); }
+        if (v.status === 'sent' || v.status === 'draft') {
+          act.appendChild(linkBtn('Mark paid', function () { markPaid(v); }));
+          act.appendChild(linkBtn('Void', function () {
+            if (window.confirm('Void the invoice to ' + v.customer + '?')) db.from('admin_invoices').update({ status: 'void' }).eq('id', v.id).then(loadInvoices);
+          }));
+        }
+        tr.append(who, what, am, sent, due, st, act);
+        body.appendChild(tr);
+      });
+      $('inv-empty').hidden = rows.length > 0;
+      $('inv-open').textContent = money(open);
+      $('inv-paid').textContent = money(paid);
+      $('inv-paid-label').textContent = 'paid in ' + year;
+      $('inv-fees').textContent = money(Math.round(fees * 100) / 100);
+    });
+  }
+  // Paid: record it, and add the money in and PayPal's fee out to Business money.
+  function markPaid(v) {
+    var amt = Number(v.amount);
+    var guess = (Math.round((amt * 0.0299 + 0.49) * 100) / 100).toFixed(2);
+    var feeText = window.prompt('PayPal fee for this payment? (card payments: 2.99% + $0.49 = $' + guess + '; PayPal/Venmo: 3.49% + $0.49; bank: 1%, max $10). Check the amount in PayPal.', guess);
+    if (feeText === null) return;
+    var fee = Math.max(0, Number(feeText) || 0), today = new Date().toISOString().slice(0, 10);
+    db.from('admin_invoices').update({ status: 'paid', paid_on: today, fee: fee }).eq('id', v.id).then(function (r) {
+      if (r.error) { $('inv-hint').textContent = 'Couldn\u2019t save: ' + r.error.message; return; }
+      var entries = [{ description: 'Invoice paid: ' + v.customer + (v.description ? ' (' + v.description + ')' : ''), amount: amt, happened_on: today }];
+      if (fee) entries.push({ description: 'PayPal fee: ' + v.customer, amount: -fee, happened_on: today });
+      db.from('admin_money').insert(entries).then(function () {
+        $('inv-hint').textContent = 'Marked paid and added to Business money.';
+        loadInvoices(); loadMoney();
+      });
+    });
+  }
+  $('inv-form').sent_on.value = new Date().toISOString().slice(0, 10);
+  $('inv-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target;
+    var row = {
+      customer: f.customer.value.trim(), customer_email: f.customer_email.value.trim() || null,
+      description: f.description.value.trim() || null, amount: Number(f.amount.value),
+      sent_on: f.sent_on.value, due_on: f.due_on.value || null,
+      paypal_url: /^https:\/\//.test(f.paypal_url.value.trim()) ? f.paypal_url.value.trim() : null,
+      recurring: f.recurring.checked
+    };
+    db.from('admin_invoices').insert(row).then(function (r) {
+      if (r.error) { $('inv-hint').textContent = 'Couldn\u2019t save: ' + r.error.message; return; }
+      f.reset(); f.sent_on.value = new Date().toISOString().slice(0, 10);
+      $('inv-hint').textContent = 'Invoice recorded.'; loadInvoices();
+    });
+  });
+
   function stat(label, value, meter) {
     var d = document.createElement('div'); d.className = 'stat';
     var n = document.createElement('p'); n.className = 'stat-num'; n.textContent = value;
@@ -203,7 +288,7 @@
       $('app').hidden = false;
       return Promise.all([
         db.from('admin_ledger').select('*').order('sort').then(function (res) { ledger = res.data || []; renderLedger(); }),
-        loadNext(), loadStats(), loadMoney()
+        loadNext(), loadStats(), loadMoney(), loadInvoices()
       ]);
     });
   }
@@ -242,7 +327,7 @@
     last = null;
     $('signin').hidden = false; $('who').hidden = true;
     $('app').hidden = true; $('not-admin').hidden = true; $('loading').hidden = true;
-    ledger = []; $('ledger').innerHTML = ''; $('next').innerHTML = ''; $('stats').innerHTML = ''; $('money-list').innerHTML = '';
+    ledger = []; $('ledger').innerHTML = ''; $('next').innerHTML = ''; $('stats').innerHTML = ''; $('money-list').innerHTML = ''; $('inv-list').innerHTML = '';
   }
   db.auth.onAuthStateChange(function (_e, session) {
     var id = session ? session.user.id : null;
