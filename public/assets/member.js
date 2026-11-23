@@ -24,14 +24,20 @@
     document.querySelectorAll('a[href^="https://localconnect.site"]').forEach(function (a) {
       a.href = a.href.replace('https://localconnect.site', 'https://' + BASE);
     });
+    // Visible text too ("Join localconnect.site" -> "Join randhawa.vip").
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (var node; (node = walker.nextNode());) {
+      if (node.nodeValue.indexOf('localconnect.site') !== -1) node.nodeValue = node.nodeValue.split('localconnect.site').join(BASE);
+    }
+    document.title = document.title.split('localconnect.site').join(BASE);
   }
   var slug = (m && m[1] !== 'www') ? m[1] : (new URLSearchParams(location.search).get('u') || '').toLowerCase();
 
   function missing() {
-    $('mp-title').textContent = slug ? slug + '.localconnect.site' : 'localconnect.site';
+    $('mp-title').textContent = slug ? slug + '.' + BASE : BASE;
     $('mp-address').textContent = '';
     $('mp-missing').hidden = false;
-    document.title = 'Not found · localconnect.site';
+    document.title = 'Not found · ' + BASE;
   }
 
   if (!/^[a-z0-9-]{3,30}$/.test(slug)) { missing(); return; }
@@ -39,11 +45,11 @@
   db.from('member_sites').select('slug, title, about, city, state, zip, created_at').eq('slug', slug).maybeSingle().then(function (r) {
     var site = r.data;
     if (!site) { missing(); return; }
-    document.title = site.title + ' · localconnect.site';
+    document.title = site.title + ' · ' + BASE;
     $('mp-address').textContent = site.slug + '.' + BASE;
     $('mp-title').textContent = site.title;
-    $('mp-where').textContent = site.city ? 'Neighbor in ' + site.city + ', ' + site.state : 'Neighbor on localconnect.site';
-    $('mp-about').textContent = site.about || ('Hi! I’m ' + site.title + (site.city ? ', a neighbor in ' + site.city : '') + '. Say hello on localconnect.site.');
+    $('mp-where').textContent = site.city ? 'Neighbor in ' + site.city + ', ' + site.state : 'Neighbor on ' + BASE;
+    $('mp-about').textContent = site.about || ('Hi! I’m ' + site.title + (site.city ? ', a neighbor in ' + site.city : '') + '. Say hello on ' + BASE + '.');
     $('mp-since').textContent = 'Member since ' + new Date(site.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     $('mp-content').hidden = false;
     loadPosts(site);
