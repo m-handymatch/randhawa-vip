@@ -1,5 +1,5 @@
 -- =====================================================================
--- randhawa.vip database (Supabase project "zip-zcta")
+-- localconnect.site database (Supabase project "zip-zcta")
 -- Already applied to the live project; kept here as the record.
 -- =====================================================================
 

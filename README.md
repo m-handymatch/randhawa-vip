@@ -113,13 +113,13 @@ All loaded in the visitor's browser from free public sources (no keys), except h
 3. When ready to open the site to everyone: Settings → Variables and Secrets → set **ALLOWED_IPS** to `*`. (Also delete any `ALLOWED_IPS` secret on the Supabase edge functions, if one was set.)
 
 
-## Moving to localconnect.site (Nov 2026)
+## Domain (Nov 2026)
 
-- The site is now **open to everyone** (no IP lock). To lock it again, set `LOCK_TO_IPS` on the Worker; the old `ALLOWED_IPS` variable is ignored.
-- `localconnect.site` is the main address; member pages are `<name>.localconnect.site`. `randhawa.vip` (and `<name>.randhawa.vip`) still work and will redirect once `REDIRECT_OLD` in `src/worker.js` is switched on.
-- Cloudflare for localconnect.site: Worker custom domain `localconnect.site` (+ `www.localconnect.site`), DNS `AAAA *` → `100::` proxied, Worker route `*.localconnect.site/*`.
-- Supabase: Authentication → URL Configuration: Site URL `https://localconnect.site`, redirect URLs `https://localconnect.site/**`. Custom SMTP is required for public sign-ups (the built-in sender only emails the project's team).
-- Pages: `rules.html` (house rules), `privacy.html` (privacy).
+- **localconnect.site is the only address.** Member pages are `<name>.localconnect.site`; `www.localconnect.site` redirects to the bare domain. The admin page stays on mandeepsr.us.
+- **randhawa.vip is disconnected.** The Worker answers any other domain with a 404, and the Supabase functions no longer accept requests from it. The Worker and repo keep the name `randhawa-vip` (renaming the Worker would break the GitHub deploy link).
+- **Still private:** `SITE_IS_PUBLIC` in `src/worker.js` is `false`, so only the IPs in `LOCK_TO_IPS` (or the older `ALLOWED_IPS`) can open the site. Set it to `true` to open it to everyone.
+- Cloudflare for localconnect.site: Worker custom domains `localconnect.site` and `www.localconnect.site`, DNS `AAAA *` → `100::` proxied, Worker route `*.localconnect.site/*`. Leave the MX records alone (they carry the site's email).
+- Supabase (zip-zcta) → Authentication → URL Configuration: Site URL `https://localconnect.site`, Redirect URL `https://localconnect.site/**`.
 
 ## Farmers markets
 

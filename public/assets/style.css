@@ -1,4 +1,4 @@
-/* randhawa.vip: colors taken from the Connecting Neighbors logo (navy, forest, leaf, teal) */
+/* localconnect.site: colors taken from the Connecting Neighbors logo (navy, forest, leaf, teal) */
 :root {
   --sky: #EEF3EF;          /* page background: soft sage */
   --sky-deep: #DDE9E0;
@@ -477,7 +477,7 @@ input:focus { box-shadow: 0 0 0 3px #BFE3C9; border-color: var(--forest); }
 .panel .oh-links { flex-wrap: wrap; min-width: 0; }
 
 /* ==========================================================================
-   Forum, personal pages (name.randhawa.vip) and house rules
+   Forum, personal pages (name.localconnect.site) and house rules
    ========================================================================== */
 .check-row { flex-direction: row; align-items: center; gap: 10px; font-weight: 400; font-size: 15px; }
 .check-row input { width: 20px; height: 20px; min-height: 0; accent-color: var(--forest); }
@@ -559,7 +559,7 @@ textarea:focus, select:focus { outline: none; border-color: var(--forest); box-s
   .panel-forum { height: 70vh; min-height: 420px; }
 }
 
-/* Personal page (name.randhawa.vip) and rules page */
+/* Personal page (name.localconnect.site) and rules page */
 .member-page { background: var(--sky); }
 .mp-top { background: var(--ink); color: #fff; border-bottom: 5px solid var(--leaf); padding: 16px 0 28px; }
 .mp-top-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }

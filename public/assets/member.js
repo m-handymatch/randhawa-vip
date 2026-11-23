@@ -18,19 +18,8 @@
 
   // Slug from the address (singh.localconnect.site -> singh). ?u=singh works for previews.
   var host = location.hostname.toLowerCase();
-  var m = host.match(/^([a-z0-9-]+)\.(localconnect\.site|randhawa\.vip)$/);
-  var BASE = m ? m[2] : 'localconnect.site';
-  if (BASE !== 'localconnect.site') {
-    document.querySelectorAll('a[href^="https://localconnect.site"]').forEach(function (a) {
-      a.href = a.href.replace('https://localconnect.site', 'https://' + BASE);
-    });
-    // Visible text too ("Join localconnect.site" -> "Join randhawa.vip").
-    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    for (var node; (node = walker.nextNode());) {
-      if (node.nodeValue.indexOf('localconnect.site') !== -1) node.nodeValue = node.nodeValue.split('localconnect.site').join(BASE);
-    }
-    document.title = document.title.split('localconnect.site').join(BASE);
-  }
+  var m = host.match(/^([a-z0-9-]+)\.localconnect\.site$/);
+  var BASE = 'localconnect.site';
   var slug = (m && m[1] !== 'www') ? m[1] : (new URLSearchParams(location.search).get('u') || '').toLowerCase();
 
   function missing() {

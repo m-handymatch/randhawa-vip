@@ -18,7 +18,7 @@ FILES = {
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "data", "home-values")
 
 def rows(name):
-    req = urllib.request.Request(BASE + name, headers={"User-Agent": "randhawa.vip home values (GitHub Actions)"})
+    req = urllib.request.Request(BASE + name, headers={"User-Agent": "localconnect.site home values (GitHub Actions)"})
     with urllib.request.urlopen(req, timeout=300) as res:
         yield from csv.reader(io.TextIOWrapper(res, encoding="utf-8", newline=""))
 

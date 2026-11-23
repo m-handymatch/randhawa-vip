@@ -1,4 +1,4 @@
-// randhawa.vip: upcoming local events for the signed-in user's city and nearby cities.
+// localconnect.site: upcoming local events for the signed-in user's city and nearby cities.
 //
 // Source: Google Events results via SerpApi (engine=google_events).
 // SerpApi's free plan has 250 searches a month, so:
@@ -20,9 +20,6 @@ const RETRY_HOURS = 3;
 const ALLOWED_ORIGINS = new Set([
   "https://localconnect.site",
   "https://www.localconnect.site",
-  "https://randhawa.vip",
-  "https://www.randhawa.vip",
-  "https://m-handymatch.github.io",
 ]);
 
 const STATE_NAMES: Record<string, string> = {

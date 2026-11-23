@@ -1,4 +1,4 @@
-// randhawa.vip: local news for the signed-in user's area.
+// localconnect.site: local news for the signed-in user's area.
 //
 // 1. Checks the user's login (Supabase Auth token in the Authorization header).
 // 2. Reads the ZIP on their profile (or ?zip= for any valid US ZIP).
@@ -16,9 +16,6 @@ const CACHE_HOURS = Number(Deno.env.get("NEWS_CACHE_HOURS") ?? "3");
 const ALLOWED_ORIGINS = new Set([
   "https://localconnect.site",
   "https://www.localconnect.site",
-  "https://randhawa.vip",
-  "https://www.randhawa.vip",
-  "https://m-handymatch.github.io",   // GitHub Pages, until randhawa.vip points at the site
 ]);
 
 const STATE_NAMES: Record<string, string> = {

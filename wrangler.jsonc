@@ -1,5 +1,5 @@
 {
-  // Cloudflare Workers config for randhawa.vip (static site + IP gatekeeper)
+  // Cloudflare Workers config for localconnect.site (static site + IP gatekeeper)
   "name": "randhawa-vip",
   "main": "src/worker.js",
   "compatibility_date": "2025-09-01",

@@ -1,4 +1,4 @@
-// LocalConnect Worker (localconnect.site; randhawa.vip is the old address).
+// LocalConnect Worker (localconnect.site). Other domains get a 404; randhawa.vip is no longer used.
 // Runs before every request.
 //
 // The site is private while SITE_IS_PUBLIC (below) is false: only the addresses in the
@@ -9,9 +9,6 @@
 // Member pages: any <name>.localconnect.site shows member.html, which loads that member's page.
 // Needs a proxied DNS record for * and a Worker route for *.localconnect.site/* (see README).
 const PRIMARY = 'localconnect.site';
-const OLD = 'randhawa.vip';
-// Set to true once localconnect.site is live, to send randhawa.vip visitors there.
-const REDIRECT_OLD = false;
 // Set to true to open the site to everyone.
 const SITE_IS_PUBLIC = false;
 
@@ -102,6 +99,10 @@ export default {
       out.headers.set('referrer-policy', 'no-referrer');
       return out;
     }
+    // Only localconnect.site (and its member subdomains, plus the workers.dev preview) serve the site.
+    if (!(adminHost === PRIMARY || adminHost.endsWith('.' + PRIMARY) || adminHost.endsWith('.workers.dev'))) {
+      return new Response('Not found', { status: 404, headers: { 'cache-control': 'no-store' } });
+    }
     // The admin files only open on the admin domain.
     if (adminUrl.pathname.startsWith('/admin/')) {
       return new Response('Not found', { status: 404 });
@@ -121,18 +122,13 @@ export default {
     const host = url.hostname.toLowerCase();
 
     // www -> bare domain, so there's one site (and one sign-in).
-    if (host === 'www.' + PRIMARY || host === 'www.' + OLD) {
-      url.hostname = REDIRECT_OLD || host === 'www.' + PRIMARY ? PRIMARY : OLD;
-      return Response.redirect(url.toString(), 301);
-    }
-    // Old address -> new address (page paths and member pages keep their place).
-    if (REDIRECT_OLD && (host === OLD || host.endsWith('.' + OLD))) {
-      url.hostname = host === OLD ? PRIMARY : host.slice(0, -OLD.length) + PRIMARY;
+    if (host === 'www.' + PRIMARY) {
+      url.hostname = PRIMARY;
       return Response.redirect(url.toString(), 301);
     }
 
     // <name>.localconnect.site: the member's page. Other paths (styles, scripts, images) are shared.
-    const sub = host.match(/^([a-z0-9-]+)\.(localconnect\.site|randhawa\.vip)$/);
+    const sub = host.match(/^([a-z0-9-]+)\.localconnect\.site$/);
     if (sub && (url.pathname === '/' || url.pathname === '/index.html')) {
       const page = new URL('/member.html', url);
       const res = await env.ASSETS.fetch(new Request(page, request));
